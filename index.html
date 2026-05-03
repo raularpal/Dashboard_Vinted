@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Vinted HQ</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0e10;--bg2:#16161a;--bg3:#1e1e24;--bg4:#2a2a32;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#f0efe8;--text2:#9b9a94;--text3:#55544f;
+  --accent:#09c97a;--accent2:#06915a;--adim:rgba(9,201,122,0.13);
+  --red:#e24b4a;--rdim:rgba(226,75,74,0.13);
+  --amber:#ef9f27;--amdim:rgba(239,159,39,0.13);
+  --blue:#378add;--bdim:rgba(55,138,221,0.13);
+  --r:10px;--rl:14px;
+  --st:env(safe-area-inset-top,0px);
+  --sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;font-size:15px;}
+
+/* TOP BAR */
+#topbar{display:flex;align-items:center;gap:10px;padding:calc(12px + var(--st)) 14px 12px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;z-index:20;}
+#menu-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:4px;display:flex;align-items:center;border-radius:8px;}
+#topbar-title{font-size:16px;font-weight:700;color:var(--accent);flex:1;}
+.ttl-badge{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;background:var(--bg4);border-radius:20px;padding:2px 8px;border:1px solid var(--border);}
+.ttl-badge.warn{color:var(--amber);border-color:rgba(239,159,39,.25);background:var(--amdim);}
+.top-icon-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.top-icon-btn.active{background:var(--adim);border-color:var(--accent);color:var(--accent);}
+
+/* DRAWER */
+#dov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30;}
+#dov.open{display:block;}
+#drawer{position:fixed;top:0;left:-290px;bottom:0;width:290px;background:var(--bg2);border-right:1px solid var(--border);z-index:40;transition:left .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding-top:var(--st);}
+#drawer.open{left:0;}
+#dhdr{padding:18px 14px 10px;border-bottom:1px solid var(--border);}
+#dhdr h2{font-size:15px;font-weight:700;color:var(--accent);}
+#dhdr p{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+.dsec{padding:10px 8px 4px;display:flex;align-items:center;justify-content:space-between;}
+.dsec-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;}
+#d-new{background:none;border:none;cursor:pointer;color:var(--text3);width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+#dlist{flex:1;overflow-y:auto;padding:0 6px 8px;}
+#dlist::-webkit-scrollbar{width:0;}
+.drow{display:flex;align-items:center;margin-bottom:2px;border-radius:var(--r);}
+.drow.active{background:var(--adim);}
+.dacc{flex:1;background:none;border:none;color:var(--text2);cursor:pointer;padding:9px 8px;border-radius:var(--r);display:flex;align-items:center;gap:9px;font-family:'Syne',sans-serif;font-size:13px;text-align:left;min-width:0;}
+.drow.active .dacc{color:var(--accent);}
+.av{width:28px;height:28px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;font-weight:500;flex-shrink:0;color:var(--text2);}
+.drow.active .av{background:var(--adim);color:var(--accent);}
+.aname{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notif{width:8px;height:8px;border-radius:50%;background:var(--accent);display:none;flex-shrink:0;}
+.drow.has-msg .notif{display:block;}
+.ddel{background:none;border:none;cursor:pointer;color:var(--text3);width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:3px;}
+.ddel:active{background:var(--rdim);color:var(--red);}
+
+/* sales chat entry in drawer */
+.d-sale-btn{margin:6px;background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--text2);cursor:pointer;padding:11px 14px;display:flex;align-items:center;gap:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;width:calc(100% - 12px);}
+.d-sale-btn.active{background:var(--adim);border-color:var(--accent);color:var(--accent);}
+
+/* MAIN */
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.panel{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.panel.active{display:flex;}
+
+/* EMPTY */
+#empty-panel{align-items:center;justify-content:center;}
+.ec{display:flex;flex-direction:column;align-items:center;gap:14px;padding:32px 24px;text-align:center;color:var(--text3);}
+.ec p{font-size:15px;color:var(--text2);}
+.ec small{font-size:12px;font-family:'DM Mono',monospace;line-height:1.6;}
+.cta{background:var(--accent);border:none;border-radius:var(--r);color:#000;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px 28px;cursor:pointer;margin-top:4px;}
+
+/* SHARED CHAT LAYOUT */
+.chat-subbar{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chat-big-av{width:36px;height:36px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'DM Mono',monospace;font-weight:500;color:var(--accent);border:1px solid var(--adim);flex-shrink:0;}
+.chat-big-av.sales-av{color:var(--blue);border-color:rgba(55,138,221,.2);background:var(--bdim);}
+.chat-inf h3{font-size:14px;font-weight:700;}
+.chat-inf p{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.chat-rr{margin-left:auto;display:flex;gap:6px;align-items:center;}
+.tag{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);}
+.tag.g{background:var(--adim);color:var(--accent);border-color:rgba(9,201,122,.2);}
+.tag.b{background:var(--bdim);color:var(--blue);border-color:rgba(55,138,221,.2);}
+#btn-ren{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--text3);font-size:12px;padding:5px 9px;font-family:'DM Mono',monospace;}
+
+.chat-msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:84%;display:flex;flex-direction:column;gap:3px;}
+.msg.out{align-self:flex-end;align-items:flex-end;}
+.msg.in{align-self:flex-start;align-items:flex-start;}
+.msg-bub{padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.msg.out .msg-bub{background:var(--accent);color:#000;border-bottom-right-radius:4px;}
+.msg.in .msg-bub{background:var(--bg3);color:var(--text);border-bottom-left-radius:4px;border:1px solid var(--border);}
+.msg.in.success .msg-bub{background:var(--adim);border-color:rgba(9,201,122,.25);color:var(--accent);}
+.msg.in.error .msg-bub{background:var(--rdim);border-color:rgba(226,75,74,.25);color:var(--red);}
+.msg.in.pending .msg-bub{background:var(--amdim);border-color:rgba(239,159,39,.25);color:var(--amber);}
+.msg-time{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;}
+.msg-img{max-width:220px;width:100%;border-radius:12px;border:1px solid var(--border);display:block;cursor:pointer;}
+.msg-note{align-self:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:4px 12px;background:var(--bg3);border-radius:20px;border:1px solid var(--border);}
+.msg-exp{align-self:center;font-size:10px;color:var(--amber);font-family:'DM Mono',monospace;padding:3px 10px;background:var(--amdim);border-radius:20px;border:1px solid rgba(239,159,39,.2);}
+
+/* PDF bubble */
+.pdf-bubble{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;border-bottom-right-radius:4px;padding:10px 13px;cursor:pointer;max-width:220px;}
+.pdf-bubble:active{background:var(--bg4);}
+.pdf-icon{width:36px;height:36px;background:var(--rdim);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;font-weight:500;color:var(--red);border:1px solid rgba(226,75,74,.15);flex-shrink:0;}
+.pdf-info .pdf-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+.pdf-info .pdf-sub{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+
+/* VENTA PARSED CARD */
+.venta-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;border-bottom-right-radius:4px;padding:0;overflow:hidden;max-width:260px;}
+.vc-body{padding:10px 13px;}
+.vc-title{font-size:13px;font-weight:700;color:var(--text);}
+.vc-row{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.vc-pill{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;background:var(--bg4);color:var(--text2);border:1px solid var(--border);}
+.vc-price{font-size:16px;font-weight:700;color:var(--accent);margin-top:6px;}
+.vc-footer{padding:8px 13px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+.vc-status{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;}
+.vc-status.ok{background:var(--adim);color:var(--accent);}
+.vc-status.err{background:var(--rdim);color:var(--red);}
+.vc-status.ing{background:var(--bdim);color:var(--blue);}
+.vc-retry{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;cursor:pointer;margin-left:auto;}
+.vc-retry:active{background:var(--bg4);}
+
+/* CHAT INPUT */
+.chat-input-wrap{padding:10px 12px calc(10px + var(--sb));background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+#pbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.pth{position:relative;width:52px;height:52px;flex-shrink:0;}
+.pth img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--border);}
+.rmi{position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:var(--red);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;}
+.irow{display:flex;gap:8px;align-items:flex-end;}
+.iicn{width:42px;height:42px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);flex-shrink:0;}
+.sbtn{background:var(--accent);border-color:var(--accent);color:#000;}
+.msg-ta{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Syne',sans-serif;font-size:15px;padding:10px 13px;resize:none;min-height:42px;max-height:110px;outline:none;line-height:1.4;}
+.msg-ta::placeholder{color:var(--text3);}
+
+/* hint bar for sales chat */
+#sales-hint{padding:7px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;}
+#sales-hint span{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;flex:1;}
+#sales-hint code{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);background:var(--adim);padding:2px 6px;border-radius:5px;}
+.sheets-cfg-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:10px;font-family:'DM Mono',monospace;padding:4px 8px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.sdot.on{background:var(--accent);}
+
+/* PDF FULLSCREEN */
+#pdf-sheet{display:none;position:fixed;inset:0;z-index:50;background:var(--bg);flex-direction:column;padding-top:var(--st);}
+#pdf-sheet.open{display:flex;}
+#psh-hdr{padding:12px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#psh-hdr h3{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pab{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:'DM Mono',monospace;font-size:11px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.pab.pb{background:var(--bdim);color:var(--blue);border-color:rgba(55,138,221,.2);}
+#pcl{background:none;border:none;cursor:pointer;color:var(--text2);width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;}
+#pdf-fr{flex:1;border:none;background:var(--bg);}
+
+/* SYNC OVERLAY */
+#sync-ov{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:24px;}
+#sync-ov.open{display:flex;}
+#sync-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rl);padding:28px 24px;width:100%;max-width:320px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;}
+#sync-ico{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+#sync-ico.l{background:var(--bdim);border:1px solid rgba(55,138,221,.2);}
+#sync-ico.s{background:var(--adim);border:1px solid rgba(9,201,122,.2);}
+#sync-ico.e{background:var(--rdim);border:1px solid rgba(226,75,74,.2);}
+#sync-title{font-size:16px;font-weight:700;}
+#sync-msg{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.6;}
+#sync-close{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:11px 28px;cursor:pointer;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{width:26px;height:26px;border:2.5px solid var(--bdim);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+
+/* MODALS */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:60;align-items:flex-end;justify-content:center;}
+.mo.open{display:flex;}
+.mbx{background:var(--bg2);border:1px solid var(--border2);border-top-left-radius:20px;border-top-right-radius:20px;padding:20px 18px calc(20px + var(--sb));width:100%;max-width:520px;}
+.mbx .handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px;}
+.mbx h3{font-size:16px;font-weight:700;margin-bottom:5px;}
+.mbx .mdesc{font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.5;font-family:'DM Mono',monospace;}
+.mbx .fg{margin-bottom:12px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fl{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em;}
+.fi{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Syne',sans-serif;font-size:14px;padding:9px 11px;outline:none;width:100%;}
+.fi::placeholder{color:var(--text3);}
+.ma{display:flex;gap:8px;margin-top:14px;}
+.mbtn{flex:1;padding:12px;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:1px solid var(--border);}
+.mbtn.cc{background:var(--bg3);color:var(--text2);}
+.mbtn.ok{background:var(--accent);color:#000;border-color:var(--accent);}
+.mbtn.dd{background:var(--rdim);color:var(--red);border-color:rgba(226,75,74,.2);}
+
+/* LIGHTBOX */
+#lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:70;align-items:center;justify-content:center;}
+#lb.open{display:flex;}
+#lb img{max-width:95vw;max-height:90vh;border-radius:10px;}
+#lb-cl{position:fixed;top:calc(16px + var(--st));right:16px;background:var(--bg3);border:none;border-radius:50%;color:var(--text2);font-size:20px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(20px + var(--sb));left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border2);border-radius:30px;padding:10px 18px;font-size:13px;color:var(--text);z-index:80;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;font-family:'DM Mono',monospace;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:var(--accent);color:var(--accent);}
+.toast.err{border-color:var(--red);color:var(--red);}
+
+#img-in{display:none;}
+#pdf-in-sales{display:none;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <button id="menu-btn" class="top-icon-btn" style="border:none;" onclick="toggleDrawer()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div id="topbar-title">Vinted HQ</div>
+  <span id="ttl-badge" class="ttl-badge">7d TTL</span>
+  <button class="top-icon-btn" title="Nueva cuenta" onclick="createAccount()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="top-icon-btn" id="btn-sales-top" title="Chat ventas" onclick="gotoSalesChat()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+</div>
+
+<!-- DRAWER -->
+<div id="dov" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <div id="dhdr"><h2>Vinted HQ</h2><p id="dracc-lbl">Sin cuentas</p></div>
+  <div class="dsec">
+    <span class="dsec-lbl">Cuentas</span>
+    <button id="d-new" onclick="createAccount();closeDrawer()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div id="dlist"></div>
+  <button class="d-sale-btn" id="d-sales-btn" onclick="gotoSalesChat();closeDrawer()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Chat de ventas
+  </button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- EMPTY -->
+  <div class="panel active" id="empty-panel">
+    <div class="ec">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <p>Bienvenido a Vinted HQ</p>
+      <small>Pulsa <strong style="color:var(--accent)">+</strong> para crear cuentas<br>o abre el <strong style="color:var(--blue)">chat de ventas</strong></small>
+      <button class="cta" onclick="gotoSalesChat()">Abrir chat de ventas</button>
+    </div>
+  </div>
+
+  <!-- ACCOUNT CHAT -->
+  <div class="panel" id="chat-panel">
+    <div class="chat-subbar">
+      <div class="chat-big-av" id="chat-av">--</div>
+      <div class="chat-inf"><h3 id="chat-title">—</h3><p id="chat-subtitle">cuenta</p></div>
+      <div class="chat-rr">
+        <button id="btn-ren" onclick="openRename()">✎</button>
+        <span class="tag g">Activa</span>
+        <span class="tag" id="chat-cnt">0</span>
+      </div>
+    </div>
+    <div class="chat-msgs" id="chat-msgs"></div>
+    <div class="chat-input-wrap">
+      <div id="pbar"></div>
+      <div class="irow">
+        <input type="file" id="img-in" multiple accept="image/*">
+        <button class="iicn" onclick="document.getElementById('img-in').click()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <textarea class="msg-ta" id="msg-ta" placeholder="Nota o foto para esta cuenta..." rows="1"></textarea>
+        <button class="iicn sbtn" onclick="sendAccountMsg()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALES CHAT -->
+  <div class="panel" id="sales-panel">
+    <div class="chat-subbar">
+      <div class="chat-big-av sales-av">€</div>
+      <div class="chat-inf">
+        <h3>Chat de ventas</h3>
+        <p id="sales-chat-sub">registra ventas y etiquetas</p>
+      </div>
+      <div class="chat-rr">
+        <button class="sheets-cfg-btn" onclick="openModal('sheets-modal')">
+          <div class="sdot" id="sdot"></div>
+          <span id="sheets-lbl">Sheets</span>
+        </button>
+      </div>
+    </div>
+    <div id="sales-hint">
+      <span>Formato: <code>3 Birkenstock Sand 43 40€</code></span>
+    </div>
+    <div class="chat-msgs" id="sales-msgs"></div>
+    <div class="chat-input-wrap">
+      <div id="sales-pbar"></div>
+      <div class="irow">
+        <input type="file" id="pdf-in-sales" accept=".pdf,image/*">
+        <button class="iicn" onclick="document.getElementById('pdf-in-sales').click()" title="Subir etiqueta PDF/foto">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </button>
+        <textarea class="msg-ta" id="sales-ta" placeholder="3 Birkenstock Sand 43 40€" rows="1"></textarea>
+        <button class="iicn sbtn" onclick="sendSalesMsg()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF FULLSCREEN -->
+<div id="pdf-sheet">
+  <div id="psh-hdr">
+    <button id="pcl" onclick="closePdfSheet()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <h3 id="psh-title">Etiqueta</h3>
+    <button class="pab pb" onclick="printCurrentPdf()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimir
+    </button>
+    <button class="pab" onclick="openPdfExt()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Abrir
+    </button>
+  </div>
+  <iframe id="pdf-fr" src=""></iframe>
+</div>
+
+<!-- SYNC OVERLAY -->
+<div id="sync-ov">
+  <div id="sync-box">
+    <div id="sync-ico" class="l"><div class="spinner"></div></div>
+    <div id="sync-title">Guardando en Sheets...</div>
+    <div id="sync-msg">Actualizando COMANDES</div>
+    <button id="sync-close" onclick="closeSyncOv()">Cerrar</button>
+  </div>
+</div>
+
+<!-- SHEETS MODAL -->
+<div class="mo" id="sheets-modal">
+  <div class="mbx">
+    <div class="handle"></div>
+    <h3>Google Sheets</h3>
+    <p class="mdesc">URL de tu Apps Script Web App conectado al archivo "Resell".</p>
+    <div class="fg mbx-fg"><span class="fl">Apps Script Web App URL</span><input class="fi" id="m-url" placeholder="https://script.google.com/macros/s/.../exec" type="url" inputmode="url"></div>
+    <div style="margin-top:10px;background:var(--bdim);border:1px solid rgba(55,138,221,.2);border-radius:var(--r);padding:10px 12px;font-size:11px;font-family:'DM Mono',monospace;color:var(--blue);line-height:1.7">
+      El script debe:<br>
+      · Buscar en "Cuentas" col D = nº cuenta → obtener email col A<br>
+      · Buscar en "COMANDES" primera fila Available con Product+Color+Size<br>
+      · Actualizar: For=email, Status=Sold, Sold=precio, Date=hoy
+    </div>
+    <details style="margin-top:10px">
+      <summary style="font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;">Ver código Apps Script completo</summary>
+      <div style="margin-top:8px;background:var(--bg3);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);overflow-x:auto;white-space:pre;border:1px solid var(--border);max-height:260px;overflow-y:auto">function doPost(e) {
+  var d = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 1. Buscar email en hoja Cuentas (col D = numCuenta, col A = email)
+  var cuentasSheet = ss.getSheetByName("Cuentas");
+  var cuentasData = cuentasSheet.getDataRange().getValues();
+  var email = "";
+  for (var i = 1; i < cuentasData.length; i++) {
+    if (String(cuentasData[i][3]) === String(d.numCuenta)) {
+      email = cuentasData[i][0];
+      break;
+    }
+  }
+  if (!email) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:false, error:"Cuenta "+d.numCuenta+" no encontrada"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 2. Buscar primera fila en COMANDES donde Product+Color+Size = Available
+  var comandesSheet = ss.getSheetByName("COMANDES");
+  var comandesData = comandesSheet.getDataRange().getValues();
+  // Columnas: A=Order, B=Product, C=Size, D=Color, E=For, F=Status, G=Sold, H=Date
+  var rowIndex = -1;
+  for (var j = 1; j < comandesData.length; j++) {
+    var prod  = String(comandesData[j][1]).trim().toLowerCase();
+    var size  = String(comandesData[j][2]).trim().toLowerCase();
+    var color = String(comandesData[j][3]).trim().toLowerCase();
+    var stat  = String(comandesData[j][5]).trim().toLowerCase();
+    if (
+      prod  === d.product.trim().toLowerCase() &&
+      size  === String(d.size).trim().toLowerCase() &&
+      color === d.color.trim().toLowerCase() &&
+      stat  === "available"
+    ) {
+      rowIndex = j + 1; // +1 porque getValues es 0-indexed pero Sheets es 1-indexed
+      break;
+    }
+  }
+  if (rowIndex === -1) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:false, error:"No hay stock disponible de "+d.product+" "+d.color+" "+d.size}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 3. Actualizar la fila encontrada
+  comandesSheet.getRange(rowIndex, 5).setValue(email);       // Col E: For
+  comandesSheet.getRange(rowIndex, 6).setValue("Sold");      // Col F: Status
+  comandesSheet.getRange(rowIndex, 7).setValue(d.price);     // Col G: Sold (precio)
+  comandesSheet.getRange(rowIndex, 9).setValue(new Date());  // Col I: Date (columna H es Bought)
+
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      ok: true,
+      row: rowIndex,
+      email: email,
+      product: d.product,
+      color: d.color,
+      size: d.size,
+      price: d.price
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({status:"ok"}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+    </details>
+    <div class="ma">
+      <button class="mbtn cc" onclick="closeModal('sheets-modal')">Cancelar</button>
+      <button class="mbtn ok" onclick="saveSheets()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="mo" id="rename-modal">
+  <div class="mbx">
+    <div class="handle"></div>
+    <h3>Renombrar cuenta</h3>
+    <div class="fg" style="margin-top:14px">
+      <span class="fl">Nombre</span>
+      <input class="fi" id="rename-in" placeholder="Ej: VintedA1" onkeydown="if(event.key==='Enter')doRename()">
+    </div>
+    <div class="ma">
+      <button class="mbtn cc" onclick="closeModal('rename-modal')">Cancelar</button>
+      <button class="mbtn ok" onclick="doRename()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="mo" id="del-modal">
+  <div class="mbx">
+    <div class="handle"></div>
+    <h3 id="del-title">¿Eliminar cuenta?</h3>
+    <p id="del-desc" style="font-size:13px;color:var(--text2);margin-top:8px;line-height:1.5;font-family:'DM Mono',monospace"></p>
+    <div class="ma">
+      <button class="mbtn cc" onclick="closeModal('del-modal')">Cancelar</button>
+      <button class="mbtn dd" id="del-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lb" onclick="closeLB()">
+  <button id="lb-cl" onclick="closeLB()">✕</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TTL_MS = 7*24*60*60*1000;
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const S={
+  accounts:[], cur:null, view:'empty',
+  accMsgs:{},       // account chat messages
+  salesMsgs:[],     // sales chat messages
+  sheetsUrl:'', sheetsOk:false,
+  pimgs:[], salesPimgs:[],
+  nextNum:1,
+};
+
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem('vhq6')||'{}');
+    S.accounts  = d.accounts  || [];
+    S.accMsgs   = d.accMsgs   || {};
+    S.salesMsgs = d.salesMsgs || [];
+    S.sheetsUrl = d.sheetsUrl || '';
+    S.sheetsOk  = d.sheetsOk  || false;
+    S.nextNum   = d.nextNum   || S.accounts.length+1;
+  }catch(e){}
+}
+function save(){
+  try{ localStorage.setItem('vhq6',JSON.stringify({
+    accounts:S.accounts, accMsgs:S.accMsgs, salesMsgs:S.salesMsgs,
+    sheetsUrl:S.sheetsUrl, sheetsOk:S.sheetsOk, nextNum:S.nextNum
+  }));}catch(e){}
+}
+
+// ── TTL ───────────────────────────────────────────────────────────────────────
+function purge(){
+  const now=Date.now(); let ch=false;
+  S.accounts.forEach(a=>{
+    const b=(S.accMsgs[a.id]||[]).length;
+    S.accMsgs[a.id]=(S.accMsgs[a.id]||[]).filter(m=>!m.ts||(now-m.ts)<TTL_MS);
+    if(S.accMsgs[a.id].length!==b)ch=true;
+  });
+  const sb=S.salesMsgs.length;
+  S.salesMsgs=S.salesMsgs.filter(m=>!m.ts||(now-m.ts)<TTL_MS);
+  if(S.salesMsgs.length!==sb)ch=true;
+  if(ch){save();if(S.view==='chat'&&S.cur)renderAccMsgs();if(S.view==='sales')renderSalesMsgs();buildDrawer();}
+}
+function daysLeft(ts){return Math.max(0,Math.ceil((TTL_MS-(Date.now()-ts))/86400000));}
+function updateTTLBadge(){
+  let oldest=null;
+  S.accounts.forEach(a=>(S.accMsgs[a.id]||[]).forEach(m=>{if(m.ts&&(oldest===null||m.ts<oldest))oldest=m.ts;}));
+  S.salesMsgs.forEach(m=>{if(m.ts&&(oldest===null||m.ts<oldest))oldest=m.ts;});
+  const b=document.getElementById('ttl-badge');
+  if(oldest!==null){const d=daysLeft(oldest);b.textContent=d<=1?'⚠ expira hoy':'borra en '+d+'d';b.className='ttl-badge'+(d<=2?' warn':'');}
+  else{b.textContent='7d TTL';b.className='ttl-badge';}
+}
+setInterval(purge,3600000); setInterval(updateTTLBadge,60000);
+
+// ── ACCOUNTS ──────────────────────────────────────────────────────────────────
+function createAccount(){
+  const name='Vinted'+String(S.nextNum).padStart(2,'0'); S.nextNum++;
+  const acc={id:Date.now()+Math.random(),name};
+  S.accounts.push(acc); S.accMsgs[acc.id]=[];
+  save(); buildDrawer(); gotoAccount(acc.id); toast('"'+name+'" creada','ok');
+}
+function askDelete(id){
+  const a=S.accounts.find(x=>x.id===id); if(!a)return;
+  document.getElementById('del-title').textContent='¿Eliminar "'+a.name+'"?';
+  document.getElementById('del-desc').textContent='Se borrarán todos sus mensajes.';
+  document.getElementById('del-ok').onclick=()=>doDelete(id);
+  openModal('del-modal');
+}
+function doDelete(id){
+  closeModal('del-modal');
+  const idx=S.accounts.findIndex(x=>x.id===id); if(idx===-1)return;
+  S.accounts.splice(idx,1); delete S.accMsgs[id]; save();
+  if(S.cur===id){S.cur=null;S.accounts.length>0?gotoAccount(S.accounts[Math.min(idx,S.accounts.length-1)].id):showEmpty();}
+  else buildDrawer();
+  toast('Cuenta eliminada','');
+}
+function openRename(){
+  const a=S.accounts.find(x=>x.id===S.cur); if(!a)return;
+  const i=document.getElementById('rename-in'); i.value=a.name;
+  openModal('rename-modal'); setTimeout(()=>{i.focus();i.select();},120);
+}
+function doRename(){
+  const v=document.getElementById('rename-in').value.trim(); if(!v)return;
+  const a=S.accounts.find(x=>x.id===S.cur); if(!a)return;
+  a.name=v; save(); closeModal('rename-modal'); buildDrawer(); renderAccHeader();
+  toast('"'+v+'"','ok');
+}
+
+// ── DRAWER ────────────────────────────────────────────────────────────────────
+function toggleDrawer(){document.getElementById('drawer').classList.toggle('open');document.getElementById('dov').classList.toggle('open');}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('dov').classList.remove('open');}
+function buildDrawer(){
+  const list=document.getElementById('dlist'); list.innerHTML='';
+  const n=S.accounts.length;
+  document.getElementById('dracc-lbl').textContent=n===0?'Sin cuentas':n+' cuenta'+(n===1?'':'s');
+  S.accounts.forEach((a,i)=>{
+    const active=a.id===S.cur&&S.view==='chat';
+    const hm=(S.accMsgs[a.id]||[]).length>0;
+    const row=document.createElement('div');
+    row.className='drow'+(active?' active':'')+(hm?' has-msg':'');
+    row.innerHTML=`<button class="dacc" onclick="gotoAccount(${JSON.stringify(a.id)});closeDrawer()">
+        <div class="av">${String(i+1).padStart(2,'0')}</div>
+        <span class="aname">${esc(a.name)}</span>
+        <div class="notif"></div>
+      </button>
+      <button class="ddel" onclick="askDelete(${JSON.stringify(a.id)})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      </button>`;
+    list.appendChild(row);
+  });
+  document.getElementById('d-sales-btn').classList.toggle('active',S.view==='sales');
+}
+
+// ── PANELS ────────────────────────────────────────────────────────────────────
+function hideAll(){['empty-panel','chat-panel','sales-panel'].forEach(id=>document.getElementById(id).classList.remove('active'));}
+function showEmpty(){S.view='empty';S.cur=null;hideAll();document.getElementById('empty-panel').classList.add('active');document.getElementById('btn-sales-top').classList.remove('active');buildDrawer();}
+function gotoAccount(id){
+  S.cur=id;S.view='chat';hideAll();document.getElementById('chat-panel').classList.add('active');
+  document.getElementById('btn-sales-top').classList.remove('active');
+  buildDrawer();renderAccHeader();renderAccMsgs();
+}
+function gotoSalesChat(){
+  S.view='sales';hideAll();document.getElementById('sales-panel').classList.add('active');
+  document.getElementById('btn-sales-top').classList.add('active');
+  buildDrawer();renderSalesMsgs();updateSheetsUI();
+}
+
+// ── ACCOUNT CHAT ──────────────────────────────────────────────────────────────
+function renderAccHeader(){
+  const a=S.accounts.find(x=>x.id===S.cur); if(!a)return;
+  const i=S.accounts.indexOf(a);
+  document.getElementById('chat-av').textContent=String(i+1).padStart(2,'0');
+  document.getElementById('chat-title').textContent=a.name;
+  document.getElementById('chat-subtitle').textContent='@'+a.name.toLowerCase().replace(/\s+/g,'')+' · Activa';
+  const msgs=S.accMsgs[a.id]||[];
+  document.getElementById('chat-cnt').textContent=msgs.length+(msgs.length===1?' msg':' msgs');
+}
+function renderAccMsgs(){
+  const c=document.getElementById('chat-msgs');
+  const msgs=S.accMsgs[S.cur]||[]; c.innerHTML='';
+  if(!msgs.length){c.innerHTML='<div class="msg-note">Sin mensajes · añade notas o fotos para esta cuenta</div>';return;}
+  msgs.forEach(m=>{
+    if(m.type==='note'){const d=document.createElement('div');d.className='msg-note';d.textContent=m.text;c.appendChild(d);return;}
+    if(m.type==='image'){
+      m.images.forEach(src=>{
+        const w=document.createElement('div');w.className='msg out';
+        const img=document.createElement('img');img.className='msg-img';img.src=src;img.onclick=()=>openLB(src);
+        const t=document.createElement('div');t.className='msg-time';t.textContent=m.time;
+        w.appendChild(img);w.appendChild(t);c.appendChild(w);
+      });return;
+    }
+    const w=document.createElement('div');w.className='msg out';
+    const b=document.createElement('div');b.className='msg-bub';b.textContent=m.text;
+    const t=document.createElement('div');t.className='msg-time';t.textContent=m.time;
+    w.appendChild(b);w.appendChild(t);c.appendChild(w);
+  });
+  c.scrollTop=c.scrollHeight;
+}
+function sendAccountMsg(){
+  const ta=document.getElementById('msg-ta'); const txt=ta.value.trim();
+  if(!txt&&!S.pimgs.length)return; if(!S.cur)return;
+  const now=new Date(); const ts=Date.now();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  if(!S.accMsgs[S.cur])S.accMsgs[S.cur]=[];
+  if(S.pimgs.length){S.accMsgs[S.cur].push({type:'image',images:[...S.pimgs],time,ts});S.pimgs=[];document.getElementById('pbar').innerHTML='';}
+  if(txt)S.accMsgs[S.cur].push({type:'text',text:txt,time,ts});
+  ta.value='';ta.style.height='auto';
+  save();buildDrawer();renderAccHeader();renderAccMsgs();
+}
+document.getElementById('img-in').addEventListener('change',function(e){
+  Array.from(e.target.files).forEach(f=>{const r=new FileReader();r.onload=ev=>{S.pimgs.push(ev.target.result);renderPrevs('pbar',S.pimgs);};r.readAsDataURL(f);});
+  this.value='';
+});
+
+// ── SALES CHAT ────────────────────────────────────────────────────────────────
+function renderSalesMsgs(){
+  const c=document.getElementById('sales-msgs'); c.innerHTML='';
+  if(!S.salesMsgs.length){
+    c.innerHTML='<div class="msg-note">Escribe una venta: 3 Birkenstock Sand 43 40€</div>';
+    return;
+  }
+  S.salesMsgs.forEach(m=>{
+    if(m.type==='text'){
+      const w=document.createElement('div');w.className='msg out';
+      const b=document.createElement('div');b.className='msg-bub';b.textContent=m.text;
+      const t=document.createElement('div');t.className='msg-time';t.textContent=m.time;
+      w.appendChild(b);w.appendChild(t);c.appendChild(w);
+    } else if(m.type==='venta'){
+      // user message
+      const wu=document.createElement('div');wu.className='msg out';
+      const bu=document.createElement('div');bu.className='msg-bub';bu.textContent=m.raw;
+      const tu=document.createElement('div');tu.className='msg-time';tu.textContent=m.time;
+      wu.appendChild(bu);wu.appendChild(tu);c.appendChild(wu);
+      // response card
+      const wr=document.createElement('div');wr.className='msg in';
+      const card=document.createElement('div');card.className='venta-card';
+      const statusClass=m.syncStatus==='ok'?'ok':m.syncStatus==='error'?'err':'ing';
+      const statusText=m.syncStatus==='ok'?'✓ Guardado en Sheets':m.syncStatus==='error'?'✗ Error: '+m.syncError:'Guardando...';
+      card.innerHTML=`<div class="vc-body">
+          <div class="vc-title">${esc(m.product)}</div>
+          <div class="vc-row">
+            <span class="vc-pill">${esc(m.color)}</span>
+            <span class="vc-pill">Talla ${esc(m.size)}</span>
+            <span class="vc-pill">Cta. ${esc(m.numCuenta)}</span>
+          </div>
+          <div class="vc-price">${esc(m.price)}€</div>
+        </div>
+        <div class="vc-footer">
+          <span class="vc-status ${statusClass}" id="vs-${m.id}">${statusText}</span>
+          ${m.syncStatus!=='ok'?`<button class="vc-retry" onclick="retrySale('${m.id}')">reintentar</button>`:''}
+        </div>`;
+      wr.appendChild(card);
+      const tr=document.createElement('div');tr.className='msg-time';tr.textContent=m.time;
+      wr.appendChild(tr);c.appendChild(wr);
+    } else if(m.type==='pdf'||m.type==='image-label'){
+      const w=document.createElement('div');w.className='msg out';
+      if(m.type==='pdf'){
+        const bub=document.createElement('div');
+        bub.className='pdf-bubble';
+        bub.onclick=()=>openPdfSheet(m.url,m.name);
+        bub.innerHTML=`<div class="pdf-icon">PDF</div><div class="pdf-info"><div class="pdf-name">${esc(m.name)}</div><div class="pdf-sub">Toca para ver · imprimir</div></div>`;
+        w.appendChild(bub);
+      } else {
+        const img=document.createElement('img');img.className='msg-img';img.src=m.url;img.onclick=()=>openLB(m.url);
+        w.appendChild(img);
+      }
+      const t=document.createElement('div');t.className='msg-time';t.textContent=m.time;
+      w.appendChild(t);c.appendChild(w);
+    }
+  });
+  c.scrollTop=c.scrollHeight;
+}
+
+// Parse venta message: "3 Birkenstock Sand 43 40€" or "3 Nike Air Max 90 White 42 65.50€"
+function parseVenta(txt){
+  // Format: [numCuenta] [product words...] [color] [size] [price€]
+  const t=txt.trim();
+  const priceMatch=t.match(/(\d+(?:[.,]\d+)?)€?$/);
+  if(!priceMatch)return null;
+  const price=parseFloat(priceMatch[1].replace(',','.'));
+  const withoutPrice=t.slice(0,t.lastIndexOf(priceMatch[0])).trim();
+  const parts=withoutPrice.split(/\s+/);
+  if(parts.length<4)return null;
+  const numCuenta=parts[0];
+  if(!/^\d+$/.test(numCuenta))return null;
+  const size=parts[parts.length-1];
+  const color=parts[parts.length-2];
+  const product=parts.slice(1,parts.length-2).join(' ');
+  if(!product||!color||!size||isNaN(price))return null;
+  return{numCuenta,product,color,size,price};
+}
+
+function sendSalesMsg(){
+  const ta=document.getElementById('sales-ta'); const txt=ta.value.trim();
+  if(!txt&&!S.salesPimgs.length)return;
+  const now=new Date(); const ts=Date.now();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+
+  if(S.salesPimgs.length){
+    // treated as image labels, already pushed by file handler
+    S.salesPimgs=[];
+    document.getElementById('sales-pbar').innerHTML='';
+  }
+  if(txt){
+    const parsed=parseVenta(txt);
+    if(parsed){
+      const msgId='v'+Date.now();
+      const msg={id:msgId,type:'venta',raw:txt,...parsed,time,ts,syncStatus:'syncing',syncError:''};
+      S.salesMsgs.push(msg);
+      ta.value='';ta.style.height='auto';
+      save();renderSalesMsgs();
+      syncVenta(msgId);
+    } else {
+      // plain text note
+      S.salesMsgs.push({type:'text',text:txt,time,ts});
+      ta.value='';ta.style.height='auto';
+      save();renderSalesMsgs();
+    }
+  }
+}
+
+// PDF / image label upload in sales chat
+document.getElementById('pdf-in-sales').addEventListener('change',function(e){
+  const file=e.target.files[0]; if(!file)return;
+  const now=new Date();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  const ts=Date.now();
+  const r=new FileReader();
+  r.onload=ev=>{
+    if(file.type==='application/pdf'){
+      S.salesMsgs.push({type:'pdf',name:file.name,url:ev.target.result,time,ts});
+    } else {
+      S.salesMsgs.push({type:'image-label',url:ev.target.result,time,ts});
+    }
+    save();renderSalesMsgs();
+  };
+  r.readAsDataURL(file);
+  this.value='';
+});
+
+// ── SYNC ──────────────────────────────────────────────────────────────────────
+async function syncVenta(msgId){
+  const msg=S.salesMsgs.find(m=>m.id===msgId); if(!msg)return;
+  if(!S.sheetsUrl){
+    msg.syncStatus='error';msg.syncError='Sin URL de Sheets configurada';
+    save();renderSalesMsgs();return;
+  }
+  showSyncOv('l','Guardando en Sheets...','Buscando '+msg.product+' '+msg.color+' '+msg.size);
+  const payload={numCuenta:msg.numCuenta,product:msg.product,color:msg.color,size:msg.size,price:msg.price};
+  try{
+    const res=await Promise.race([
+      fetch(S.sheetsUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)}),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),15000))
+    ]);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    if(json.ok){
+      msg.syncStatus='ok';
+      save();renderSalesMsgs();
+      showSyncOv('s','✓ Guardado en Sheets',json.product+' '+json.color+' '+json.size+'\nComprador: '+json.email+'\nPrecio: '+json.price+'€');
+    } else {
+      throw new Error(json.error||'error desconocido');
+    }
+  }catch(err){
+    const errMsg=err.message==='timeout'?'Timeout (15s). Comprueba tu conexión.':err.message.includes('fetch')||err.message.includes('Network')?'No se puede conectar. Verifica la URL del script y que el acceso es "Cualquier persona".':'Error: '+err.message;
+    msg.syncStatus='error';msg.syncError=errMsg;
+    save();renderSalesMsgs();
+    showSyncOv('e','No se pudo guardar',errMsg);
+  }
+}
+
+function retrySale(id){
+  const msg=S.salesMsgs.find(m=>m.id===id); if(!msg)return;
+  msg.syncStatus='syncing';msg.syncError='';
+  save();renderSalesMsgs();
+  syncVenta(id);
+}
+
+// ── SYNC OVERLAY ──────────────────────────────────────────────────────────────
+function showSyncOv(type,title,msg){
+  const ic=document.getElementById('sync-ico'),ti=document.getElementById('sync-title'),ms=document.getElementById('sync-msg'),cl=document.getElementById('sync-close');
+  ti.textContent=title;ms.textContent=msg;cl.style.display='none';
+  if(type==='l'){ic.className='l';ic.innerHTML='<div class="spinner"></div>';}
+  else if(type==='s'){ic.className='s';ic.innerHTML='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';cl.style.display='block';setTimeout(closeSyncOv,3000);}
+  else{ic.className='e';ic.innerHTML='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';cl.style.display='block';}
+  document.getElementById('sync-ov').classList.add('open');
+}
+function closeSyncOv(){document.getElementById('sync-ov').classList.remove('open');}
+
+// ── PDF ───────────────────────────────────────────────────────────────────────
+let _pdfUrl='';
+function openPdfSheet(url,name){
+  _pdfUrl=url;
+  document.getElementById('psh-title').textContent=name||'Etiqueta';
+  document.getElementById('pdf-fr').src=url;
+  document.getElementById('pdf-sheet').classList.add('open');
+}
+function closePdfSheet(){document.getElementById('pdf-sheet').classList.remove('open');document.getElementById('pdf-fr').src='';}
+function printCurrentPdf(){
+  if(!_pdfUrl)return;
+  const w=window.open();
+  w.document.write('<iframe src="'+_pdfUrl+'" width="100%" height="100%" frameborder="0" onload="window.print()"></iframe>');
+}
+function openPdfExt(){
+  if(!_pdfUrl)return;
+  const w=window.open();
+  w.document.write('<iframe src="'+_pdfUrl+'" width="100%" height="100%" frameborder="0"></iframe>');
+}
+
+// ── SHEETS ────────────────────────────────────────────────────────────────────
+function saveSheets(){
+  S.sheetsUrl=document.getElementById('m-url').value.trim();
+  S.sheetsOk=!!S.sheetsUrl;
+  save();closeModal('sheets-modal');updateSheetsUI();toast('URL guardada','ok');
+}
+function updateSheetsUI(){
+  const dot=document.getElementById('sdot'),lbl=document.getElementById('sheets-lbl');
+  if(S.sheetsOk&&S.sheetsUrl){dot.classList.add('on');lbl.textContent='Sheets ✓';}
+  else{dot.classList.remove('on');lbl.textContent='Sheets';}
+}
+
+// ── PREVIEWS ──────────────────────────────────────────────────────────────────
+function renderPrevs(barId,arr){
+  const b=document.getElementById(barId);b.innerHTML='';
+  arr.forEach((s,i)=>{const w=document.createElement('div');w.className='pth';w.innerHTML=`<img src="${s}"><button class="rmi" onclick="rmPrev('${barId}',${i})">✕</button>`;b.appendChild(w);});
+}
+function rmPrev(barId,i){
+  if(barId==='pbar')S.pimgs.splice(i,1);
+  else S.salesPimgs.splice(i,1);
+  renderPrevs(barId,barId==='pbar'?S.pimgs:S.salesPimgs);
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openModal(id){
+  if(id==='sheets-modal')document.getElementById('m-url').value=S.sheetsUrl;
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────────
+function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('open');}
+function closeLB(){document.getElementById('lb').classList.remove('open');}
+
+// ── TEXTAREA RESIZE ───────────────────────────────────────────────────────────
+document.querySelectorAll('.msg-ta').forEach(ta=>{
+  ta.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';});
+  ta.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      if(this.id==='msg-ta')sendAccountMsg();
+      else sendSalesMsg();
+    }
+  });
+});
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let _tt;
+function toast(msg,type){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(_tt);_tt=setTimeout(()=>{t.className='toast';},2500);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+load();purge();buildDrawer();updateTTLBadge();
+if(S.salesMsgs.length>0)gotoSalesChat();
+else if(S.accounts.length>0)gotoSalesChat();
+else showEmpty();
+updateSheetsUI();
+</script>
+</body>
+</html>
