@@ -267,6 +267,7 @@ textarea.inp::placeholder{color:var(--t3);}
       <div class="sb-inf"><h3 id="c-title">—</h3><p id="c-sub">cuenta</p></div>
       <div class="sb-r">
         <button class="sb-btn" id="c-ren">✎</button>
+        <a class="sb-btn" id="c-email-btn" href="#" style="text-decoration:none;font-size:16px;" title="Enviar fotos por email">📧</a>
         <span class="tag g">Activa</span>
         <span class="tag" id="c-cnt">0</span>
       </div>
@@ -391,12 +392,13 @@ textarea.inp::placeholder{color:var(--t3);}
 
 <script>
 'use strict';
-const SURL = 'https://script.google.com/macros/s/AKfycbwh9IUFmj8wgKOX7ePgIr6KVwpum7q0odVkGNNHk32dxZ7Muvve-Tgc7SHNz_R9ifIuxA/exec';
+const SURL = 'https://script.google.com/macros/s/AKfycbzEehaL4UruKfopEPD6fVpGARq7lnd34J57Fi-Kes69NMIvGYScfVgVKZQfY3kgCadTdg/exec';
 const TTL  = 7*24*60*60*1000;
 
 let accounts=[], curId=null, view='empty';
 let accMsgs={}, saleMsgs=[];
 let nextNum=1, pendingFile=null;
+let accEmails={}; // {accountName: email}
 
 // ── API ───────────────────────────────────────────────────────────────────────
 async function POST(body){
@@ -444,6 +446,11 @@ async function init(){
       accounts=ar.accounts;
       nextNum=Math.max(...accounts.map(a=>parseInt(a.name)||0),accounts.length)+1;
     }
+    // Load emails from Cuentas sheet
+    try{
+      const er=await GET({action:'getEmails'});
+      if(er.ok&&er.emails) accEmails=er.emails;
+    }catch(e){}
     setLoadMsg('Cargando mensajes...');
     const mr=await GET({action:'getMessages'});
     if(mr.ok){
@@ -583,6 +590,18 @@ function renderChatHeader(){
   document.getElementById('c-sub').textContent='cuenta '+a.name+' · activa';
   const n=(accMsgs[a.id]||[]).length;
   document.getElementById('c-cnt').textContent=n+(n===1?' msg':' msgs');
+  // Set email button
+  const email=accEmails[a.name]||'';
+  const emailBtn=document.getElementById('c-email-btn');
+  if(email){
+    emailBtn.href='mailto:'+email+'?subject=Fotos+cuenta+'+encodeURIComponent(a.name);
+    emailBtn.style.opacity='1';
+    emailBtn.title='Enviar fotos a '+email;
+  } else {
+    emailBtn.href='#';
+    emailBtn.style.opacity='0.3';
+    emailBtn.title='Email no encontrado';
+  }
 }
 function renderAccMsgs(){
   const c=document.getElementById('c-msgs');
