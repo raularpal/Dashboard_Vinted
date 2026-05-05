@@ -719,7 +719,7 @@ function renderSaleMsgs(){
         const info=document.createElement('div');
         info.style.cssText='flex:1;min-width:0;';
         info.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--t1)">'+esc(r.product)+'</div>'
-          +'<div style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">'+esc(r.color)+' · T.'+esc(r.size)+'</div>';
+          +'<div style="font-size:11px;color:var(--t3);font-family:monospace;margin-top:2px;">'+esc(r.color)+' · T.'+esc(r.size)+'</div>';
         row.appendChild(info);
         if(r.url){
           const a=document.createElement('a');
