@@ -400,7 +400,7 @@ textarea.inp::placeholder{color:var(--t3);}
 
 <script>
 'use strict';
-const SURL = 'https://script.google.com/macros/s/AKfycbylQgMMIURtTmm0XqcY0HDBjY8R80vUpBsUmJVDiW87Mfdww9ofgmQtXXeCEUZKK5izxw/exec';
+const SURL = 'https://script.google.com/macros/s/AKfycbyLtSXQ9d9-m6TxeDMJWJ0298dKZCxJi0CnV327E4yD2vGuLKXTIC2YC-ZYu5f8H7m61Q/exec';
 const TTL  = 7*24*60*60*1000;
 
 let accounts=[], curId=null, view='empty';
@@ -931,6 +931,9 @@ function isFotoQuery(txt){
 }
 function isPublicadoCmd(txt){
   return txt.toLowerCase().trim().startsWith(PUBLICADO_KEYWORD);
+}
+function isErrorCmd(txt){
+  return txt.toLowerCase().trim() === 'error';
 }
 function parsePublicado(txt){
   // "publicado Adidas Spezial Pink 37" → {product, color, size}
