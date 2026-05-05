@@ -400,7 +400,7 @@ textarea.inp::placeholder{color:var(--t3);}
 
 <script>
 'use strict';
-const SURL = 'https://script.google.com/macros/s/AKfycbzEehaL4UruKfopEPD6fVpGARq7lnd34J57Fi-Kes69NMIvGYScfVgVKZQfY3kgCadTdg/exec';
+const SURL = 'https://script.google.com/macros/s/AKfycbylQgMMIURtTmm0XqcY0HDBjY8R80vUpBsUmJVDiW87Mfdww9ofgmQtXXeCEUZKK5izxw/exec';
 const TTL  = 7*24*60*60*1000;
 
 let accounts=[], curId=null, view='empty';
@@ -697,6 +697,45 @@ function renderSaleMsgs(){
       w.append(b,t); c.appendChild(w);
     } else if(m.type==='file'){
       c.appendChild(makeFileBubble(m));
+    } else if(m.type==='system'||m.type==='searching'){
+      const w=document.createElement('div'); w.className='msg in';
+      const b=document.createElement('div');
+      b.className='bub';
+      b.style.cssText='background:var(--bg3);color:var(--t2);border:1px solid var(--b1);border-bottom-left-radius:4px;font-family:monospace;font-size:13px;';
+      b.textContent=m.text||'';
+      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
+      w.append(b,t); c.appendChild(w);
+    } else if(m.type==='fotos'){
+      const w=document.createElement('div'); w.className='msg in';
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--bg3);border:1px solid var(--b1);border-radius:16px;border-bottom-left-radius:4px;overflow:hidden;max-width:300px;';
+      const hdr=document.createElement('div');
+      hdr.style.cssText='padding:10px 14px 6px;font-size:12px;color:var(--t3);font-family:monospace;border-bottom:1px solid var(--b1);';
+      hdr.textContent='📦 Stock disponible ('+m.results.length+')';
+      card.appendChild(hdr);
+      m.results.forEach(r=>{
+        const row=document.createElement('div');
+        row.style.cssText='padding:8px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;';
+        const info=document.createElement('div');
+        info.style.cssText='flex:1;min-width:0;';
+        info.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--t1)">'+esc(r.product)+'</div>'
+          +'<div style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;">'+esc(r.color)+' · T.'+esc(r.size)+'</div>';
+        row.appendChild(info);
+        if(r.url){
+          const a=document.createElement('a');
+          a.href=r.url; a.target='_blank'; a.rel='noopener';
+          a.style.cssText='background:var(--bdim);color:var(--bl);border:1px solid rgba(55,138,221,.2);border-radius:8px;font-size:10px;font-family:monospace;padding:4px 8px;text-decoration:none;white-space:nowrap;flex-shrink:0;';
+          a.textContent='📸 Ver fotos';
+          row.appendChild(a);
+        }
+        card.appendChild(row);
+      });
+      const hint=document.createElement('div');
+      hint.style.cssText='padding:8px 14px;font-size:10px;color:var(--t3);font-family:monospace;';
+      hint.textContent='Escribe "publicado Adidas Spezial Pink 37" para marcarlo';
+      card.appendChild(hint);
+      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
+      w.append(card,t); c.appendChild(w);
     } else if(m.type==='venta'){
       // User bubble
       const wu=document.createElement('div'); wu.className='msg out';
@@ -763,6 +802,29 @@ document.getElementById('pdf-in').addEventListener('change', async function(){
   this.value='';
 });
 
+// Keywords que disparan búsqueda de fotos
+const FOTO_KEYWORDS = ['adidas','birkenstock','nike','on cloud','shoes'];
+const PUBLICADO_KEYWORD = 'publicado ';
+
+function isFotoQuery(txt){
+  const t = txt.toLowerCase().trim();
+  return FOTO_KEYWORDS.some(k => t === k || t.startsWith(k+' ') || t.includes(' '+k));
+}
+function isPublicadoCmd(txt){
+  return txt.toLowerCase().trim().startsWith(PUBLICADO_KEYWORD);
+}
+function parsePublicado(txt){
+  // "publicado Adidas Spezial Pink 37" → {product, color, size}
+  const t = txt.trim().slice(PUBLICADO_KEYWORD.length).trim();
+  const parts = t.split(/\s+/);
+  if(parts.length < 3) return null;
+  const size = parts[parts.length-1];
+  const color = parts[parts.length-2];
+  const product = parts.slice(0, parts.length-2).join(' ');
+  if(!product||!color||!size) return null;
+  return {product, color, size};
+}
+
 function parseVenta(txt){
   const t=txt.trim();
   const pm=t.match(/(\d+(?:[.,]\d+)?)\s*€?\s*$/); if(!pm) return null;
@@ -781,6 +843,56 @@ async function sendSaleMsg(){
   const ta=document.getElementById('s-ta'); const txt=ta.value.trim(); if(!txt) return;
   const now=new Date(); const ts=Date.now();
   const time=pad(now.getHours())+':'+pad(now.getMinutes());
+
+  // Comando: publicado Adidas Spezial Pink 37
+  if(isPublicadoCmd(txt)){
+    const p=parsePublicado(txt);
+    if(p){
+      saleMsgs.push({type:'text',text:txt,time,ts});
+      ta.value=''; ta.style.height='auto'; renderSaleMsgs();
+      try{
+        const res=await POST({action:'marcarPublicado',product:p.product,color:p.color,size:p.size});
+        if(res.ok){
+          saleMsgs.push({type:'system',text:'✓ Marcado como publicado: '+p.product+' '+p.color+' '+p.size,time,ts:ts+1});
+        } else {
+          saleMsgs.push({type:'system',text:'✗ Error: '+res.error,time,ts:ts+1});
+        }
+        renderSaleMsgs();
+      }catch(e){
+        saleMsgs.push({type:'system',text:'✗ Sin conexión',time,ts:ts+1});
+        renderSaleMsgs();
+      }
+    }
+    return;
+  }
+
+  // Query de fotos: adidas, birkenstock, shoes, etc.
+  if(isFotoQuery(txt)){
+    saleMsgs.push({type:'text',text:txt,time,ts});
+    ta.value=''; ta.style.height='auto';
+    // Mostrar burbuja "buscando..."
+    const searchId='s'+ts;
+    saleMsgs.push({type:'searching',id:searchId,text:'Buscando stock disponible...',time,ts:ts+1});
+    renderSaleMsgs();
+    try{
+      const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
+      // Reemplazar burbuja searching con resultado
+      const idx=saleMsgs.findIndex(m=>m.id===searchId);
+      if(res.ok && res.results && res.results.length>0){
+        saleMsgs[idx]={type:'fotos',results:res.results,query:txt,time,ts:ts+1};
+      } else {
+        const msg=res.msg||res.error||'Sin resultados';
+        saleMsgs[idx]={type:'system',text:msg,time,ts:ts+1};
+      }
+      renderSaleMsgs();
+    }catch(e){
+      const idx=saleMsgs.findIndex(m=>m.id===searchId);
+      saleMsgs[idx]={type:'system',text:'✗ Error al buscar: '+e.message,time,ts:ts+1};
+      renderSaleMsgs();
+    }
+    return;
+  }
+
   const parsed=parseVenta(txt);
   if(parsed){
     const id='v'+ts;
