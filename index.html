@@ -618,10 +618,52 @@ function renderAccMsgs(){
   if(!msgs.length){c.innerHTML='<div class="mnote">Sin mensajes · sube fotos o escribe una nota</div>';return;}
   msgs.forEach(m=>{
     if(m.type==='images'){
-      // Multiple Drive image links
       c.appendChild(makeImgGrid(m.urls||[],m.time));
     } else if(m.type==='file'){
       c.appendChild(makeFileBubble(m));
+    } else if(m.type==='system'||m.type==='searching'){
+      const w=document.createElement('div'); w.className='msg in';
+      const b=document.createElement('div'); b.className='bub';
+      b.style.cssText='background:var(--bg3);color:var(--t2);border:1px solid var(--b1);border-bottom-left-radius:4px;font-family:monospace;font-size:13px;';
+      b.textContent=m.text||'';
+      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
+      w.append(b,t); c.appendChild(w);
+    } else if(m.type==='fotos'){
+      const w=document.createElement('div'); w.className='msg in';
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--bg3);border:1px solid var(--b1);border-radius:16px;border-bottom-left-radius:4px;overflow:hidden;max-width:300px;';
+      const hdr=document.createElement('div');
+      hdr.style.cssText='padding:10px 14px 6px;font-size:12px;color:var(--t3);font-family:monospace;border-bottom:1px solid var(--b1);';
+      hdr.textContent='Stock disponible ('+m.results.length+')';
+      card.appendChild(hdr);
+      m.results.forEach(function(r){
+        const row=document.createElement('div');
+        row.style.cssText='padding:8px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;';
+        const info=document.createElement('div'); info.style.cssText='flex:1;min-width:0;';
+        const name=document.createElement('div');
+        name.style.cssText='font-size:13px;font-weight:700;color:var(--t1);';
+        name.textContent=r.product;
+        const sub=document.createElement('div');
+        sub.style.cssText='font-size:11px;color:var(--t3);font-family:monospace;margin-top:2px;';
+        sub.textContent=r.color+' - T.'+r.size;
+        info.append(name,sub);
+        row.appendChild(info);
+        if(r.url){
+          const a=document.createElement('a');
+          a.href=r.url; a.target='_blank'; a.rel='noopener';
+          a.style.cssText='background:var(--bdim);color:var(--bl);border:1px solid rgba(55,138,221,.2);border-radius:8px;font-size:10px;font-family:monospace;padding:4px 8px;text-decoration:none;white-space:nowrap;flex-shrink:0;';
+          a.textContent='Ver fotos';
+          row.appendChild(a);
+        }
+        card.appendChild(row);
+      });
+      const hint=document.createElement('div');
+      hint.style.cssText='padding:8px 14px;font-size:10px;color:var(--t3);font-family:monospace;';
+      const first=m.results[0]||{};
+      hint.textContent='publicado '+(first.product||'')+' '+(first.color||'')+' '+(first.size||'');
+      card.appendChild(hint);
+      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
+      w.append(card,t); c.appendChild(w);
     } else {
       const w=document.createElement('div'); w.className='msg out';
       const b=document.createElement('div'); b.className='bub'; b.textContent=m.text||'';
@@ -673,6 +715,52 @@ document.getElementById('img-in').addEventListener('change', async function(){
 async function sendAccMsg(){
   const ta=document.getElementById('c-ta'); const txt=ta.value.trim();
   if(!txt||!curId) return;
+
+  // Si es búsqueda de fotos o comando publicado → misma lógica que chat ventas
+  if(isFotoQuery(txt)||isPublicadoCmd(txt)){
+    const now=new Date(); const ts=Date.now();
+    const time=pad(now.getHours())+':'+pad(now.getMinutes());
+    if(!accMsgs[curId]) accMsgs[curId]=[];
+
+    if(isPublicadoCmd(txt)){
+      const p=parsePublicado(txt);
+      if(p){
+        accMsgs[curId].push({type:'text',text:txt,time,ts});
+        ta.value=''; ta.style.height='auto'; renderAccMsgs();
+        try{
+          const res=await POST({action:'marcarPublicado',product:p.product,color:p.color,size:p.size});
+          accMsgs[curId].push({type:'system',text:res.ok?'Marcado como publicado: '+p.product+' '+p.color+' '+p.size:'Error: '+res.error,time,ts:ts+1});
+        }catch(e){
+          accMsgs[curId].push({type:'system',text:'Sin conexion',time,ts:ts+1});
+        }
+        renderAccMsgs(); buildDrawer(); renderChatHeader();
+      }
+      return;
+    }
+
+    if(isFotoQuery(txt)){
+      accMsgs[curId].push({type:'text',text:txt,time,ts});
+      const searchId='s'+ts;
+      accMsgs[curId].push({type:'searching',id:searchId,text:'Buscando stock...',time,ts:ts+1});
+      ta.value=''; ta.style.height='auto'; renderAccMsgs();
+      try{
+        const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
+        const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
+        if(res.ok&&res.results&&res.results.length>0){
+          accMsgs[curId][idx]={type:'fotos',results:res.results,query:txt,time,ts:ts+1};
+        } else {
+          accMsgs[curId][idx]={type:'system',text:res.msg||res.error||'Sin resultados',time,ts:ts+1};
+        }
+        renderAccMsgs();
+      }catch(e){
+        const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
+        accMsgs[curId][idx]={type:'system',text:'Error: '+e.message,time,ts:ts+1};
+        renderAccMsgs();
+      }
+      buildDrawer(); renderChatHeader();
+      return;
+    }
+  }
   const now=new Date(); const ts=Date.now();
   const time=pad(now.getHours())+':'+pad(now.getMinutes());
   const a=accounts.find(x=>x.id===curId);
@@ -711,32 +799,39 @@ function renderSaleMsgs(){
       card.style.cssText='background:var(--bg3);border:1px solid var(--b1);border-radius:16px;border-bottom-left-radius:4px;overflow:hidden;max-width:300px;';
       const hdr=document.createElement('div');
       hdr.style.cssText='padding:10px 14px 6px;font-size:12px;color:var(--t3);font-family:monospace;border-bottom:1px solid var(--b1);';
-      hdr.textContent='📦 Stock disponible ('+m.results.length+')';
+      hdr.textContent='Stock disponible ('+m.results.length+')';
       card.appendChild(hdr);
-      m.results.forEach(r=>{
+      m.results.forEach(function(r){
         const row=document.createElement('div');
         row.style.cssText='padding:8px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;';
         const info=document.createElement('div');
         info.style.cssText='flex:1;min-width:0;';
-        info.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--t1)">'+esc(r.product)+'</div>'
-          +'<div style="font-size:11px;color:var(--t3);font-family:monospace;margin-top:2px;">'+esc(r.color)+' · T.'+esc(r.size)+'</div>';
+        const name=document.createElement('div');
+        name.style.cssText='font-size:13px;font-weight:700;color:var(--t1);';
+        name.textContent=r.product;
+        const sub=document.createElement('div');
+        sub.style.cssText='font-size:11px;color:var(--t3);font-family:monospace;margin-top:2px;';
+        sub.textContent=r.color+' - T.'+r.size;
+        info.append(name,sub);
         row.appendChild(info);
         if(r.url){
           const a=document.createElement('a');
           a.href=r.url; a.target='_blank'; a.rel='noopener';
           a.style.cssText='background:var(--bdim);color:var(--bl);border:1px solid rgba(55,138,221,.2);border-radius:8px;font-size:10px;font-family:monospace;padding:4px 8px;text-decoration:none;white-space:nowrap;flex-shrink:0;';
-          a.textContent='📸 Ver fotos';
+          a.textContent='Ver fotos';
           row.appendChild(a);
         }
         card.appendChild(row);
       });
       const hint=document.createElement('div');
       hint.style.cssText='padding:8px 14px;font-size:10px;color:var(--t3);font-family:monospace;';
-      hint.textContent='Escribe "publicado Adidas Spezial Pink 37" para marcarlo';
+      const first=m.results[0]||{};
+      hint.textContent='publicado '+( first.product||'')+' '+(first.color||'')+' '+(first.size||'');
       card.appendChild(hint);
       const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
       w.append(card,t); c.appendChild(w);
     } else if(m.type==='venta'){
+
       // User bubble
       const wu=document.createElement('div'); wu.className='msg out';
       const bu=document.createElement('div'); bu.className='bub'; bu.textContent=m.raw||'';
