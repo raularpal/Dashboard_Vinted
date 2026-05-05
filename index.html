@@ -268,6 +268,7 @@ textarea.inp::placeholder{color:var(--t3);}
       <div class="sb-r">
         <button class="sb-btn" id="c-ren">✎</button>
         <a class="sb-btn" id="c-email-btn" href="#" style="text-decoration:none;font-size:16px;" title="Enviar fotos por email">📧</a>
+        <button class="sb-btn red" id="c-clear-btn">🗑</button>
         <span class="tag g">Activa</span>
         <span class="tag" id="c-cnt">0</span>
       </div>
@@ -276,6 +277,13 @@ textarea.inp::placeholder{color:var(--t3);}
     <div id="c-upload-progress" style="display:none;padding:8px 14px;background:var(--amdim);border-bottom:1px solid rgba(239,159,39,.2);flex-shrink:0;align-items:center;gap:10px;">
       <div class="spin-sm"></div>
       <span id="c-upload-msg" style="font-size:12px;color:var(--am);font-family:'DM Mono',monospace;flex:1;">Subiendo fotos...</span>
+    </div>
+    <div id="c-clear-bar" style="display:none;padding:12px 14px;background:var(--rdim);border-bottom:1px solid rgba(226,75,74,.2);flex-shrink:0;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--re);font-family:'DM Mono',monospace;line-height:1.5;">⚠ ¿Borrar todos los mensajes de esta cuenta? No se puede deshacer.</p>
+      <div class="cfm">
+        <button class="cfm-btn no" id="c-cfm-no">Cancelar</button>
+        <button class="cfm-btn yes" id="c-cfm-yes">Sí, borrar</button>
+      </div>
     </div>
     <div class="msgs" id="c-msgs"></div>
     <div class="inp-wrap">
@@ -537,6 +545,7 @@ function hideAll(){document.querySelectorAll('.panel').forEach(p=>p.classList.re
 function showEmpty(){view='empty';curId=null;hideAll();document.getElementById('p-empty').classList.add('on');document.getElementById('btn-sales').classList.remove('on');buildDrawer();}
 function showChat(id){
   view='chat';curId=id;hideAll();document.getElementById('p-chat').classList.add('on');
+  closeAccClearBar();
   document.getElementById('btn-sales').classList.remove('on');
   buildDrawer();renderChatHeader();renderAccMsgs();
 }
@@ -819,7 +828,17 @@ async function retrySale(id){
   m.syncStatus='syncing'; m.syncError=''; renderSaleMsgs(); await doSyncVenta(id);
 }
 
-// ── CLEAR ────────────────────────────────────────────────────────────────────
+// ── CLEAR ACCOUNT CHAT ───────────────────────────────────────────────────────
+function openAccClearBar(){ document.getElementById('c-clear-bar').style.display='flex'; }
+function closeAccClearBar(){ document.getElementById('c-clear-bar').style.display='none'; }
+async function confirmAccClear(){
+  if(!curId) return;
+  accMsgs[curId]=[]; closeAccClearBar(); renderAccMsgs(); renderChatHeader();
+  try{ await POST({action:'deleteAccount', accountId:curId}); }catch(e){}
+  toast('Chat vaciado','ok');
+}
+
+// ── CLEAR──────────────────────────────────────────────────────────────────
 function openClearBar(){document.getElementById('clear-bar').classList.add('on');}
 function closeClearBar(){document.getElementById('clear-bar').classList.remove('on');}
 async function confirmClear(){
@@ -910,6 +929,9 @@ document.getElementById('c-img-btn').addEventListener('click',()=>document.getEl
 document.getElementById('c-send').addEventListener('click',sendAccMsg);
 document.getElementById('c-ta').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
 document.getElementById('c-ta').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAccMsg();}});
+document.getElementById('c-clear-btn').addEventListener('click',openAccClearBar);
+document.getElementById('c-cfm-no').addEventListener('click',closeAccClearBar);
+document.getElementById('c-cfm-yes').addEventListener('click',confirmAccClear);
 document.getElementById('s-clear-btn').addEventListener('click',openClearBar);
 document.getElementById('cfm-no').addEventListener('click',closeClearBar);
 document.getElementById('cfm-yes').addEventListener('click',confirmClear);
