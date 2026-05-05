@@ -722,6 +722,26 @@ async function sendAccMsg(){
     const time=pad(now.getHours())+':'+pad(now.getMinutes());
     if(!accMsgs[curId]) accMsgs[curId]=[];
 
+    if(isErrorCmd(txt)){
+      // Desmarcar último auto-marcado de este chat
+      const last=lastAutoMarked[curId];
+      accMsgs[curId].push({type:'text',text:txt,time,ts});
+      ta.value=''; ta.style.height='auto';
+      if(last){
+        try{
+          await POST({action:'desmarcarPublicado',product:last.product,color:last.color,size:last.size});
+          accMsgs[curId].push({type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1});
+          delete lastAutoMarked[curId];
+        }catch(e){
+          accMsgs[curId].push({type:'system',text:'Error al desmarcar',time,ts:ts+1});
+        }
+      } else {
+        accMsgs[curId].push({type:'system',text:'No hay ninguno marcado recientemente',time,ts:ts+1});
+      }
+      renderAccMsgs(); buildDrawer(); renderChatHeader();
+      return;
+    }
+
     if(isPublicadoCmd(txt)){
       const p=parsePublicado(txt);
       if(p){
@@ -729,7 +749,7 @@ async function sendAccMsg(){
         ta.value=''; ta.style.height='auto'; renderAccMsgs();
         try{
           const res=await POST({action:'marcarPublicado',product:p.product,color:p.color,size:p.size});
-          accMsgs[curId].push({type:'system',text:res.ok?'Marcado como publicado: '+p.product+' '+p.color+' '+p.size:'Error: '+res.error,time,ts:ts+1});
+          accMsgs[curId].push({type:'system',text:res.ok?'Marcado: '+p.product+' '+p.color+' T.'+p.size:'Error: '+res.error,time,ts:ts+1});
         }catch(e){
           accMsgs[curId].push({type:'system',text:'Sin conexion',time,ts:ts+1});
         }
@@ -747,11 +767,15 @@ async function sendAccMsg(){
         const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
         const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
         if(res.ok&&res.results&&res.results.length>0){
-          accMsgs[curId][idx]={type:'fotos',results:res.results,query:txt,time,ts:ts+1};
+          const first=res.results[0];
+          accMsgs[curId][idx]={type:'fotos',results:[first],query:txt,time,ts:ts+1,autoMarked:first};
+          lastAutoMarked[curId]=first;
+          renderAccMsgs();
+          await POST({action:'marcarPublicado',product:first.product,color:first.color,size:first.size}).catch(()=>{});
         } else {
-          accMsgs[curId][idx]={type:'system',text:res.msg||res.error||'Sin resultados',time,ts:ts+1};
+          accMsgs[curId][idx]={type:'system',text:res.msg||res.error||'No hay stock disponible',time,ts:ts+1};
+          renderAccMsgs();
         }
-        renderAccMsgs();
       }catch(e){
         const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
         accMsgs[curId][idx]={type:'system',text:'Error: '+e.message,time,ts:ts+1};
@@ -938,6 +962,26 @@ async function sendSaleMsg(){
   const ta=document.getElementById('s-ta'); const txt=ta.value.trim(); if(!txt) return;
   const now=new Date(); const ts=Date.now();
   const time=pad(now.getHours())+':'+pad(now.getMinutes());
+
+  // Comando: error → desmarcar último
+  if(isErrorCmd(txt)){
+    const last=lastAutoMarked['__sales__'];
+    saleMsgs.push({type:'text',text:txt,time,ts});
+    ta.value=''; ta.style.height='auto';
+    if(last){
+      try{
+        await POST({action:'desmarcarPublicado',product:last.product,color:last.color,size:last.size});
+        saleMsgs.push({type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1});
+        delete lastAutoMarked['__sales__'];
+      }catch(e){
+        saleMsgs.push({type:'system',text:'Error al desmarcar',time,ts:ts+1});
+      }
+    } else {
+      saleMsgs.push({type:'system',text:'No hay ninguno marcado recientemente',time,ts:ts+1});
+    }
+    renderSaleMsgs();
+    return;
+  }
 
   // Comando: publicado Adidas Spezial Pink 37
   if(isPublicadoCmd(txt)){
