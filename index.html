@@ -474,9 +474,10 @@ async function init(){
           if(!accMsgs[m.accountId]) accMsgs[m.accountId]=[];
           try{
             const parsed=JSON.parse(m.text);
+            // Restore fotos/system messages properly
             accMsgs[m.accountId].push(parsed);
           }catch(e){
-            accMsgs[m.accountId].push({type:'text',text:m.text,time:m.time,ts:m.ts});
+            accMsgs[m.accountId].push({type:m.type||'text',text:m.text,time:m.time,ts:m.ts});
           }
         }
       });
@@ -723,14 +724,21 @@ async function sendAccMsg(){
     if(!accMsgs[curId]) accMsgs[curId]=[];
 
     if(isErrorCmd(txt)){
-      // Desmarcar último auto-marcado de este chat
       const last=lastAutoMarked[curId];
-      accMsgs[curId].push({type:'text',text:txt,time,ts});
+      const errTxtMsg={type:'text',text:txt,time,ts};
+      accMsgs[curId].push(errTxtMsg);
+      const ae=accounts.find(x=>x.id===curId);
+      POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
+        type:'text',text:JSON.stringify(errTxtMsg),time,ts}).catch(()=>{});
       ta.value=''; ta.style.height='auto';
       if(last){
         try{
           await POST({action:'desmarcarPublicado',product:last.product,color:last.color,size:last.size});
-          accMsgs[curId].push({type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1});
+          const desmarcMsg={type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1};
+          accMsgs[curId].push(desmarcMsg);
+          const ad=accounts.find(x=>x.id===curId);
+          POST({action:'saveMessage',accountId:curId,accountName:ad?ad.name:'',
+            type:'system',text:JSON.stringify(desmarcMsg),time,ts:ts+1}).catch(()=>{});
           delete lastAutoMarked[curId];
         }catch(e){
           accMsgs[curId].push({type:'system',text:'Error al desmarcar',time,ts:ts+1});
@@ -768,13 +776,22 @@ async function sendAccMsg(){
         const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
         if(res.ok&&res.results&&res.results.length>0){
           const first=res.results[0];
-          accMsgs[curId][idx]={type:'fotos',results:[first],query:txt,time,ts:ts+1,autoMarked:first};
+          const fotosMsg={type:'fotos',results:[first],query:txt,time,ts:ts+1,autoMarked:first};
+          accMsgs[curId][idx]=fotosMsg;
           lastAutoMarked[curId]=first;
           renderAccMsgs();
+          // Save to Sheets
+          const a=accounts.find(x=>x.id===curId);
+          POST({action:'saveMessage',accountId:curId,accountName:a?a.name:'',
+            type:'fotos',text:JSON.stringify(fotosMsg),time,ts:ts+1}).catch(()=>{});
           await POST({action:'marcarPublicado',product:first.product,color:first.color,size:first.size}).catch(()=>{});
         } else {
-          accMsgs[curId][idx]={type:'system',text:res.msg||res.error||'No hay stock disponible',time,ts:ts+1};
+            const sysMsg={type:'system',text:res.msg||res.error||'No hay stock disponible',time,ts:ts+1};
+          accMsgs[curId][idx]=sysMsg;
           renderAccMsgs();
+          const a2=accounts.find(x=>x.id===curId);
+          POST({action:'saveMessage',accountId:curId,accountName:a2?a2.name:'',
+            type:'system',text:JSON.stringify(sysMsg),time,ts:ts+1}).catch(()=>{});
         }
       }catch(e){
         const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
