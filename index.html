@@ -927,7 +927,9 @@ const PUBLICADO_KEYWORD = 'publicado ';
 
 function isFotoQuery(txt){
   const t = txt.toLowerCase().trim();
-  return FOTO_KEYWORDS.some(k => t === k || t.startsWith(k+' ') || t.includes(' '+k));
+  // Must be EXACTLY a keyword — never if starts with a number (that's a venta)
+  if(/^\d/.test(t)) return false;
+  return FOTO_KEYWORDS.some(k => t === k);
 }
 function isPublicadoCmd(txt){
   return txt.toLowerCase().trim().startsWith(PUBLICADO_KEYWORD);
@@ -965,26 +967,6 @@ async function sendSaleMsg(){
   const ta=document.getElementById('s-ta'); const txt=ta.value.trim(); if(!txt) return;
   const now=new Date(); const ts=Date.now();
   const time=pad(now.getHours())+':'+pad(now.getMinutes());
-
-  // Comando: error → desmarcar último
-  if(isErrorCmd(txt)){
-    const last=lastAutoMarked['__sales__'];
-    saleMsgs.push({type:'text',text:txt,time,ts});
-    ta.value=''; ta.style.height='auto';
-    if(last){
-      try{
-        await POST({action:'desmarcarPublicado',product:last.product,color:last.color,size:last.size});
-        saleMsgs.push({type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1});
-        delete lastAutoMarked['__sales__'];
-      }catch(e){
-        saleMsgs.push({type:'system',text:'Error al desmarcar',time,ts:ts+1});
-      }
-    } else {
-      saleMsgs.push({type:'system',text:'No hay ninguno marcado recientemente',time,ts:ts+1});
-    }
-    renderSaleMsgs();
-    return;
-  }
 
   // Comando: publicado Adidas Spezial Pink 37
   if(isPublicadoCmd(txt)){
