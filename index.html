@@ -229,6 +229,10 @@ textarea.inp::placeholder{color:var(--t3);}
   <button class="tb-btn" id="btn-new">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
+  <button class="tb-btn" id="btn-stock" title="Añadir stock">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:-6px"><path d="M21 10H3M16 2l5 8-5 8"/></svg>
+  </button>
   <button class="tb-btn" id="btn-sales">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
@@ -244,6 +248,9 @@ textarea.inp::placeholder{color:var(--t3);}
     </button>
   </div>
   <div id="dlist"></div>
+  <button id="d-stock" style="margin:0 8px 6px;background:none;border:1px solid var(--b1);border-radius:var(--r);color:var(--t2);cursor:pointer;padding:11px 14px;display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;width:calc(100% - 16px);">
+    📦 Añadir Stock
+  </button>
   <button id="d-sales">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     Chat de ventas
@@ -323,6 +330,13 @@ textarea.inp::placeholder{color:var(--t3);}
         <button class="cfm-btn yes" id="cfm-yes">Sí, borrar todo</button>
       </div>
     </div>
+    <div id="del-msg-bar" style="display:none;padding:12px 14px;background:var(--rdim);border-bottom:1px solid rgba(226,75,74,.2);flex-shrink:0;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--re);font-family:monospace;line-height:1.5;">¿Borrar este mensaje?</p>
+      <div style="display:flex;gap:8px;">
+        <button class="cfm-btn no" id="del-msg-no">Cancelar</button>
+        <button class="cfm-btn yes" id="del-msg-yes">Borrar</button>
+      </div>
+    </div>
     <div class="msgs" id="s-msgs"></div>
     <div class="inp-wrap">
       <div class="inp-row">
@@ -337,6 +351,71 @@ textarea.inp::placeholder{color:var(--t3);}
       </div>
     </div>
   </div>
+
+  <!-- STOCK PANEL -->
+  <div class="panel" id="p-stock">
+    <div class="sbar">
+      <div class="sb-av" style="color:var(--am);border-color:rgba(239,159,39,.25);background:var(--amdim);">📦</div>
+      <div class="sb-inf"><h3>Añadir Stock</h3><p>añade nuevos zapatos a COMANDES</p></div>
+      <div class="sb-r">
+        <button class="sb-btn" id="stock-back-btn">← Volver</button>
+      </div>
+    </div>
+    <div id="stock-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:16px;">
+      <div id="stock-status" style="display:none;padding:10px 14px;border-radius:var(--r);font-size:13px;font-family:monospace;text-align:center;"></div>
+
+      <!-- Products grid -->
+      <div>
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Modelo</div>
+        <div id="stock-products-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div>
+      </div>
+
+      <!-- New product input -->
+      <div id="stock-new-product-wrap" style="display:none;">
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Nombre del nuevo modelo</div>
+        <input class="fi" id="stock-new-product" placeholder="Ej: New Balance 574" style="width:100%;">
+      </div>
+
+      <!-- Colors grid -->
+      <div id="stock-colors-wrap" style="display:none;">
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Color</div>
+        <div id="stock-colors-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div>
+      </div>
+
+      <!-- New color input -->
+      <div id="stock-new-color-wrap" style="display:none;">
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Nombre del color</div>
+        <input class="fi" id="stock-new-color" placeholder="Ej: DarkGreen" style="width:100%;">
+      </div>
+
+      <!-- Sizes grid -->
+      <div id="stock-sizes-wrap" style="display:none;">
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Tallas (toca para seleccionar)</div>
+        <div id="stock-sizes-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+      </div>
+
+      <!-- Price -->
+      <div id="stock-price-wrap" style="display:none;">
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Precio de Compra (€)</div>
+        <input class="fi" id="stock-price" type="number" step="0.01" placeholder="Ej: 35.00" inputmode="decimal" style="width:100%;">
+      </div>
+
+      <!-- Add to cart button -->
+      <button id="stock-add-cart-btn" disabled style="background:var(--bl);border:none;border-radius:var(--r);color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;cursor:pointer;opacity:.4;">🛒 Añadir al carrito</button>
+
+      <!-- Cart -->
+      <div id="stock-cart-wrap" style="display:none;">
+        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Carrito</div>
+        <div id="stock-cart-items" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);font-size:13px;font-family:monospace;">
+          <span style="color:var(--t3);">Total pares: <strong id="stock-total-pairs" style="color:var(--t1);">0</strong></span>
+          <span style="color:var(--t3);">Inversión: <strong id="stock-total-price" style="color:var(--ac);">0.00€</strong></span>
+        </div>
+        <button id="stock-save-btn" style="margin-top:12px;background:var(--ac);border:none;border-radius:var(--r);color:#000;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;cursor:pointer;width:100%;">🚀 Guardar todo el stock</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- SYNC OVERLAY -->
@@ -723,6 +802,29 @@ async function sendAccMsg(){
     const time=pad(now.getHours())+':'+pad(now.getMinutes());
     if(!accMsgs[curId]) accMsgs[curId]=[];
 
+    // Error Adidas Spezial Brown 40 40€ → undo venta
+    const errorVenta = parseErrorVenta(txt);
+    if(errorVenta){
+      accMsgs[curId].push({type:'text',text:txt,time,ts});
+      const ae=accounts.find(x=>x.id===curId);
+      POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
+        type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
+      ta.value=''; ta.style.height='auto'; renderAccMsgs();
+      try{
+        const res=await POST({action:'undoVenta',product:errorVenta.product,color:errorVenta.color,size:errorVenta.size,price:errorVenta.price});
+        const msg=res.ok
+          ?'Venta deshecha: '+errorVenta.product+' '+errorVenta.color+' T.'+errorVenta.size+' vuelve a Available'
+          :'Error: '+(res.error||'no encontrado');
+        accMsgs[curId].push({type:'system',text:msg,time,ts:ts+1});
+        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
+          type:'system',text:JSON.stringify({type:'system',text:msg,time,ts:ts+1}),time,ts:ts+1}).catch(()=>{});
+      }catch(e){
+        accMsgs[curId].push({type:'system',text:'Error: '+e.message,time,ts:ts+1});
+      }
+      renderAccMsgs(); buildDrawer(); renderChatHeader();
+      return;
+    }
+
     if(isErrorCmd(txt)){
       const last=lastAutoMarked[curId];
       const errTxtMsg={type:'text',text:txt,time,ts};
@@ -815,14 +917,26 @@ async function sendAccMsg(){
 }
 
 // ── SALES CHAT ────────────────────────────────────────────────────────────────
+function addLongPress(el, ts){
+  let timer = null;
+  el.addEventListener('touchstart', ()=>{ timer=setTimeout(()=>askDelMsg(ts), 600); }, {passive:true});
+  el.addEventListener('touchend', ()=>{ clearTimeout(timer); }, {passive:true});
+  el.addEventListener('touchmove', ()=>{ clearTimeout(timer); }, {passive:true});
+  // Desktop: right click
+  el.addEventListener('contextmenu', e=>{ e.preventDefault(); askDelMsg(ts); });
+}
+
 function renderSaleMsgs(){
   const c=document.getElementById('s-msgs'); c.innerHTML='';
   if(!saleMsgs.length){c.innerHTML='<div class="mnote">1º sube etiqueta · 2º escribe la venta</div>';return;}
+  // Long press state
+  let _lpTimer = null;
   saleMsgs.forEach(m=>{
     if(m.type==='text'){
       const w=document.createElement('div'); w.className='msg out';
       const b=document.createElement('div'); b.className='bub'; b.textContent=m.text||'';
       const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
+      addLongPress(w, m.ts);
       w.append(b,t); c.appendChild(w);
     } else if(m.type==='file'){
       c.appendChild(makeFileBubble(m));
@@ -877,6 +991,7 @@ function renderSaleMsgs(){
       const wu=document.createElement('div'); wu.className='msg out';
       const bu=document.createElement('div'); bu.className='bub'; bu.textContent=m.raw||'';
       const tu=document.createElement('div'); tu.className='mtime'; tu.textContent=m.time;
+      addLongPress(wu, m.ts);
       wu.append(bu,tu); c.appendChild(wu);
       // Response card
       const wr=document.createElement('div'); wr.className='msg in';
@@ -1171,6 +1286,9 @@ function pad(n){return String(n).padStart(2,'0');}
 
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 document.getElementById('menu-btn').addEventListener('click',openDrawer);
+document.getElementById('btn-stock').addEventListener('click',showStock);
+document.getElementById('d-stock').addEventListener('click',()=>{showStock();closeDrawer();});
+document.getElementById('stock-back-btn').addEventListener('click',()=>{ if(saleMsgs.length>0||view==='sales') showSales(); else showEmpty(); });
 document.getElementById('dov').addEventListener('click',closeDrawer);
 document.getElementById('btn-new').addEventListener('click',createAccount);
 document.getElementById('btn-sales').addEventListener('click',showSales);
@@ -1185,6 +1303,8 @@ document.getElementById('c-ta').addEventListener('keydown',function(e){if(e.key=
 document.getElementById('c-clear-btn').addEventListener('click',openAccClearBar);
 document.getElementById('c-cfm-no').addEventListener('click',closeAccClearBar);
 document.getElementById('c-cfm-yes').addEventListener('click',confirmAccClear);
+document.getElementById('del-msg-no').addEventListener('click',cancelDelMsg);
+document.getElementById('del-msg-yes').addEventListener('click',confirmDelMsg);
 document.getElementById('s-clear-btn').addEventListener('click',openClearBar);
 document.getElementById('cfm-no').addEventListener('click',closeClearBar);
 document.getElementById('cfm-yes').addEventListener('click',confirmClear);
