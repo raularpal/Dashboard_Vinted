@@ -1438,33 +1438,78 @@ function onStockColorSelected(sizes){
   document.getElementById('stock-sizes-wrap').style.display='block';
   document.getElementById('stock-price-wrap').style.display='block';
   _stockSizes={};
+  sizes.forEach(s=>{ _stockSizes[s]=0; });
+  renderSizeGrid();
+  checkStockValidity();
+}
+
+function renderSizeGrid(){
   const sgrid=document.getElementById('stock-sizes-grid'); sgrid.innerHTML='';
-  sizes.forEach(s=>{
+  const product=_stockProduct==='NEW'?document.getElementById('stock-new-product').value.trim():_stockProduct;
+  const color=_stockColor==='NEW'?document.getElementById('stock-new-color').value.trim():_stockColor;
+  const allSizes=Object.keys(_stockSizes);
+
+  allSizes.forEach(s=>{
+    // Count current stock for this size
+    const inStock=(_stockData&&_stockData.stock)?
+      (_stockData.stock||[]).filter(i=>
+        (i.Product||'').toLowerCase()===product.toLowerCase()&&
+        (i.Color||'').toLowerCase()===color.toLowerCase()&&
+        (i.Size||'').toString().trim()===s
+      ).length : 0;
+
     const div=document.createElement('div');
-    div.style.cssText='padding:12px 6px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--b1);cursor:pointer;text-align:center;font-size:14px;font-weight:600;color:var(--t1);position:relative;transition:all .15s;user-select:none;';
-    div.textContent=s;
+    div.style.cssText='padding:8px 6px 6px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--b1);cursor:pointer;text-align:center;position:relative;transition:all .15s;user-select:none;';
+
+    // Size number
+    const sizeNum=document.createElement('div');
+    sizeNum.style.cssText='font-size:15px;font-weight:700;color:var(--t1);';
+    sizeNum.textContent=s;
+
+    // Stock count below
+    const stockLbl=document.createElement('div');
+    stockLbl.style.cssText='font-size:10px;font-family:monospace;color:var(--t3);margin-top:2px;';
+    stockLbl.textContent=inStock+' en stock';
+
+    // Badge for qty being added
     const badge=document.createElement('div');
     badge.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:var(--bl);border-radius:50%;font-size:11px;color:#fff;display:none;align-items:center;justify-content:center;font-weight:700;';
-    div.appendChild(badge);
+    if((_stockSizes[s]||0)>0){
+      badge.textContent=_stockSizes[s]; badge.style.display='flex';
+      div.style.background='rgba(55,138,221,.12)'; div.style.border='1px solid rgba(55,138,221,.5)';
+    }
+
+    // Minus button (bottom left)
+    const minus=document.createElement('button');
+    minus.textContent='-';
+    minus.style.cssText='position:absolute;bottom:-6px;left:-6px;width:20px;height:20px;background:var(--rdim);border:1px solid rgba(226,75,74,.3);border-radius:50%;color:var(--re);font-size:14px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;padding:0;';
+    if((_stockSizes[s]||0)>0) minus.style.display='flex';
+
+    minus.addEventListener('click',e=>{
+      e.stopPropagation();
+      if((_stockSizes[s]||0)>0){
+        _stockSizes[s]--;
+        if(_stockSizes[s]===0){
+          badge.style.display='none'; minus.style.display='none';
+          div.style.background='rgba(255,255,255,.05)'; div.style.border='1px solid var(--b1)';
+        } else {
+          badge.textContent=_stockSizes[s];
+        }
+        checkStockValidity();
+      }
+    });
+
     div.addEventListener('click',()=>{
       _stockSizes[s]=(_stockSizes[s]||0)+1;
       badge.textContent=_stockSizes[s]; badge.style.display='flex';
+      minus.style.display='flex';
       div.style.background='rgba(55,138,221,.12)'; div.style.border='1px solid rgba(55,138,221,.5)';
       checkStockValidity();
     });
-    let lt=null;
-    div.addEventListener('touchstart',()=>{ lt=setTimeout(()=>{
-      if((_stockSizes[s]||0)>0){ _stockSizes[s]--;
-        if(_stockSizes[s]===0){ badge.style.display='none'; div.style.background='rgba(255,255,255,.05)'; div.style.border='1px solid var(--b1)'; }
-        else badge.textContent=_stockSizes[s];
-        checkStockValidity();
-      }
-    },500); },{passive:true});
-    div.addEventListener('touchend',()=>clearTimeout(lt),{passive:true});
-    div.addEventListener('touchmove',()=>clearTimeout(lt),{passive:true});
+
+    div.append(sizeNum, stockLbl, badge, minus);
     sgrid.appendChild(div);
   });
-  checkStockValidity();
 }
 
 function makePill(text,dashed){
