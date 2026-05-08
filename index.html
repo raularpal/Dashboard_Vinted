@@ -226,12 +226,8 @@ textarea.inp::placeholder{color:var(--t3);}
   </button>
   <div id="tb-title">Vinted HQ</div>
   <span id="tb-status">● Sheets</span>
-  <button class="tb-btn" id="btn-new">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </button>
   <button class="tb-btn" id="btn-stock" title="Añadir stock">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:-6px"><path d="M21 10H3M16 2l5 8-5 8"/></svg>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
   <button class="tb-btn" id="btn-sales">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -243,7 +239,7 @@ textarea.inp::placeholder{color:var(--t3);}
   <div id="dh"><h2>Vinted HQ</h2><p id="d-count">Sin cuentas</p></div>
   <div id="d-sec">
     <span id="d-sec-lbl">Cuentas</span>
-    <button id="d-new">
+    <button id="d-new" style="background:var(--adim);border:1px solid rgba(9,201,122,.25);color:var(--ac);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
   </div>
@@ -1297,7 +1293,7 @@ function pad(n){return String(n).padStart(2,'0');}
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 document.getElementById('menu-btn').addEventListener('click',openDrawer);
 document.getElementById('dov').addEventListener('click',closeDrawer);
-document.getElementById('btn-new').addEventListener('click',createAccount);
+// btn-new is now only in drawer
 document.getElementById('btn-sales').addEventListener('click',showSales);
 document.getElementById('emp-btn').addEventListener('click',showSales);
 document.getElementById('d-new').addEventListener('click',()=>{createAccount();closeDrawer();});
@@ -1330,6 +1326,248 @@ document.getElementById('mo-rename-save').addEventListener('click',doRename);
 document.getElementById('mo-rename-in').addEventListener('keydown',e=>{if(e.key==='Enter')doRename();});
 document.getElementById('mo-del-cancel').addEventListener('click',()=>closeMo('mo-del'));
 document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('on');}));
+
+// ── STOCK ─────────────────────────────────────────────────────────────────────
+const STOCK_API = 'https://script.google.com/macros/s/AKfycby4kQlZ_m4t_8bp9NS_7fm5mq7G5_6LzHSy2Y3xpyERI0ysub30GuOH9-YxFWsG-CzlTQ/exec';
+let _stockData = null;
+let _stockProduct = '';
+let _stockColor = '';
+let _stockSizes = {};
+let _stockCart = [];
+let _modelColorsMap = {};
+let _desiredStock = {};
+
+function showStock(){
+  view='stock'; hideAll(); document.getElementById('p-stock').classList.add('on');
+  document.getElementById('btn-sales').classList.remove('on');
+  buildDrawer();
+  if(!_stockData) loadStockData();
+  else renderStockProducts();
+}
+
+async function loadStockData(){
+  setStockStatus('Cargando datos...','am');
+  try{
+    const res=await fetch(STOCK_API);
+    const data=await res.json();
+    _stockData=data;
+    let ds=data.desiredStock||{};
+    const catalog=data.catalog||[];
+    if(Object.keys(ds).length===0&&catalog.length>0){
+      catalog.forEach(item=>{
+        if(!ds[item.Product]) ds[item.Product]={};
+        if(!ds[item.Product][item.Color]) ds[item.Product][item.Color]=["36","37","38","39","40","41","42","43","44"];
+      });
+    }
+    _desiredStock=ds;
+    _modelColorsMap={};
+    for(const [model,val] of Object.entries(ds)){
+      _modelColorsMap[model]=val&&!Array.isArray(val)&&typeof val==='object'?Object.keys(val):(Array.isArray(val)?val:[]);
+    }
+    setStockStatus('','');
+    renderStockProducts();
+  }catch(e){
+    setStockStatus('Error al cargar datos','err');
+  }
+}
+
+function setStockStatus(msg,type){
+  const el=document.getElementById('stock-status');
+  if(!msg){el.style.display='none';return;}
+  el.style.display='block'; el.textContent=msg;
+  el.style.background=type==='err'?'var(--rdim)':type==='ok'?'var(--adim)':'var(--amdim)';
+  el.style.color=type==='err'?'var(--re)':type==='ok'?'var(--ac)':'var(--am)';
+  el.style.border='1px solid '+(type==='err'?'rgba(226,75,74,.2)':type==='ok'?'rgba(9,201,122,.2)':'rgba(239,159,39,.2)');
+}
+
+function renderStockProducts(){
+  const grid=document.getElementById('stock-products-grid'); grid.innerHTML='';
+  Object.keys(_desiredStock).sort().forEach(p=>{
+    const div=makePill(p,false);
+    div.addEventListener('click',()=>{
+      grid.querySelectorAll('.spill').forEach(d=>unselPill(d));
+      selPill(div);
+      _stockProduct=p; _stockColor=''; _stockSizes={};
+      document.getElementById('stock-new-product-wrap').style.display='none';
+      onStockProductSelected();
+    });
+    grid.appendChild(div);
+  });
+  const newDiv=makePill('+ Nuevo Modelo',true);
+  newDiv.addEventListener('click',()=>{
+    grid.querySelectorAll('.spill').forEach(d=>unselPill(d)); selPill(newDiv);
+    _stockProduct='NEW'; _stockColor='NEW'; _stockSizes={};
+    document.getElementById('stock-new-product-wrap').style.display='block';
+    document.getElementById('stock-colors-wrap').style.display='none';
+    document.getElementById('stock-new-color-wrap').style.display='block';
+    onStockColorSelected(["36","37","38","39","40","41","42","43","44"]);
+  });
+  grid.appendChild(newDiv);
+}
+
+function onStockProductSelected(){
+  document.getElementById('stock-colors-wrap').style.display='block';
+  document.getElementById('stock-new-color-wrap').style.display='none';
+  document.getElementById('stock-sizes-wrap').style.display='none';
+  document.getElementById('stock-price-wrap').style.display='none';
+  checkStockValidity();
+  const colors=(_modelColorsMap[_stockProduct]||[]).sort();
+  const cgrid=document.getElementById('stock-colors-grid'); cgrid.innerHTML='';
+  colors.forEach(c=>{
+    const inStock=(_stockData.stock||[]).filter(i=>(i.Product||'').toLowerCase()===_stockProduct.toLowerCase()&&(i.Color||'').toLowerCase()===c.toLowerCase()).length;
+    const div=makePill(c+' ('+inStock+')',false); div.dataset.color=c;
+    div.addEventListener('click',()=>{
+      cgrid.querySelectorAll('.spill').forEach(d=>unselPill(d)); selPill(div);
+      _stockColor=c; _stockSizes={};
+      const sizes=(_desiredStock[_stockProduct]&&_desiredStock[_stockProduct][c])||["36","37","38","39","40","41","42","43","44"];
+      onStockColorSelected(sizes);
+    });
+    cgrid.appendChild(div);
+  });
+  const newC=makePill('+ Nuevo Color',true);
+  newC.addEventListener('click',()=>{
+    cgrid.querySelectorAll('.spill').forEach(d=>unselPill(d)); selPill(newC);
+    _stockColor='NEW';
+    document.getElementById('stock-new-color-wrap').style.display='block';
+    onStockColorSelected(["36","37","38","39","40","41","42","43","44"]);
+  });
+  cgrid.appendChild(newC);
+}
+
+function onStockColorSelected(sizes){
+  document.getElementById('stock-sizes-wrap').style.display='block';
+  document.getElementById('stock-price-wrap').style.display='block';
+  _stockSizes={};
+  const sgrid=document.getElementById('stock-sizes-grid'); sgrid.innerHTML='';
+  sizes.forEach(s=>{
+    const div=document.createElement('div');
+    div.style.cssText='padding:12px 6px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--b1);cursor:pointer;text-align:center;font-size:14px;font-weight:600;color:var(--t1);position:relative;transition:all .15s;user-select:none;';
+    div.textContent=s;
+    const badge=document.createElement('div');
+    badge.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:var(--bl);border-radius:50%;font-size:11px;color:#fff;display:none;align-items:center;justify-content:center;font-weight:700;';
+    div.appendChild(badge);
+    div.addEventListener('click',()=>{
+      _stockSizes[s]=(_stockSizes[s]||0)+1;
+      badge.textContent=_stockSizes[s]; badge.style.display='flex';
+      div.style.background='rgba(55,138,221,.12)'; div.style.border='1px solid rgba(55,138,221,.5)';
+      checkStockValidity();
+    });
+    let lt=null;
+    div.addEventListener('touchstart',()=>{ lt=setTimeout(()=>{
+      if((_stockSizes[s]||0)>0){ _stockSizes[s]--;
+        if(_stockSizes[s]===0){ badge.style.display='none'; div.style.background='rgba(255,255,255,.05)'; div.style.border='1px solid var(--b1)'; }
+        else badge.textContent=_stockSizes[s];
+        checkStockValidity();
+      }
+    },500); },{passive:true});
+    div.addEventListener('touchend',()=>clearTimeout(lt),{passive:true});
+    div.addEventListener('touchmove',()=>clearTimeout(lt),{passive:true});
+    sgrid.appendChild(div);
+  });
+  checkStockValidity();
+}
+
+function makePill(text,dashed){
+  const div=document.createElement('div');
+  div.className='spill';
+  div.style.cssText='padding:11px 10px;background:rgba(255,255,255,.05);border-radius:10px;border:1px '+(dashed?'dashed':'solid')+' var(--b1);cursor:pointer;text-align:center;font-size:13px;font-weight:600;color:'+(dashed?'var(--t3)':'var(--t1)')+';transition:all .15s;user-select:none;';
+  div.textContent=text;
+  return div;
+}
+function selPill(d){ d.style.background='rgba(55,138,221,.15)'; d.style.border='1px solid rgba(55,138,221,.5)'; d.style.color='var(--bl)'; }
+function unselPill(d){ d.style.background='rgba(255,255,255,.05)'; d.style.border='1px '+(d.style.borderStyle==='dashed'?'dashed':'solid')+' var(--b1)'; d.style.color=d.textContent.startsWith('+')?'var(--t3)':'var(--t1)'; }
+
+function checkStockValidity(){
+  const total=Object.values(_stockSizes).reduce((a,v)=>a+v,0);
+  const price=document.getElementById('stock-price');
+  const newProd=document.getElementById('stock-new-product').value.trim();
+  const newCol=document.getElementById('stock-new-color').value.trim();
+  const finalProd=_stockProduct==='NEW'?newProd:_stockProduct;
+  const finalCol=_stockColor==='NEW'?newCol:_stockColor;
+  const btn=document.getElementById('stock-add-cart-btn');
+  const valid=total>0&&price&&price.value.trim()!==''&&finalProd!==''&&finalCol!=='';
+  btn.disabled=!valid; btn.style.opacity=valid?'1':'.4';
+}
+
+document.getElementById('stock-add-cart-btn').addEventListener('click',()=>{
+  const newProd=document.getElementById('stock-new-product').value.trim();
+  const newCol=document.getElementById('stock-new-color').value.trim();
+  const finalProd=_stockProduct==='NEW'?newProd:_stockProduct;
+  const finalCol=_stockColor==='NEW'?newCol:_stockColor;
+  const priceEl=document.getElementById('stock-price');
+  const boughtPrice=parseFloat(priceEl.value.replace(',','.'));
+  const selectedSizes=[];
+  for(const [size,qty] of Object.entries(_stockSizes)){ for(let i=0;i<qty;i++) selectedSizes.push(size); }
+  if(!selectedSizes.length||!finalProd||isNaN(boughtPrice)) return;
+  _stockCart.push({id:Date.now(),product:finalProd,color:finalCol,sizes:selectedSizes,boughtPrice});
+  updateStockCartUI();
+  priceEl.value=''; _stockProduct=''; _stockColor=''; _stockSizes={};
+  document.getElementById('stock-new-product-wrap').style.display='none';
+  document.getElementById('stock-new-color-wrap').style.display='none';
+  document.getElementById('stock-colors-wrap').style.display='none';
+  document.getElementById('stock-sizes-wrap').style.display='none';
+  document.getElementById('stock-price-wrap').style.display='none';
+  document.getElementById('stock-products-grid').querySelectorAll('.spill').forEach(d=>unselPill(d));
+  checkStockValidity();
+  toast('Añadido al carrito','ok');
+});
+
+function updateStockCartUI(){
+  const wrap=document.getElementById('stock-cart-wrap');
+  const container=document.getElementById('stock-cart-items');
+  if(!_stockCart.length){wrap.style.display='none';return;}
+  wrap.style.display='block'; container.innerHTML='';
+  let totalPairs=0, totalPrice=0;
+  _stockCart.forEach(item=>{
+    totalPairs+=item.sizes.length; totalPrice+=item.boughtPrice*item.sizes.length;
+    const sizeCounts=item.sizes.reduce((a,s)=>{a[s]=(a[s]||0)+1;return a;},{});
+    const sizeStr=Object.entries(sizeCounts).map(([s,q])=>q>1?s+' x'+q:s).join(', ');
+    const div=document.createElement('div');
+    div.style.cssText='background:rgba(255,255,255,.05);border:1px solid var(--b1);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;';
+    div.innerHTML='<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--t1);">'+esc(item.product)+' - '+esc(item.color)+'</div>'
+      +'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+sizeStr+' ('+item.sizes.length+' pares)</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--ac);">'+(item.boughtPrice*item.sizes.length).toFixed(2)+'€</span>'
+      +'<button onclick="removeStockCart('+item.id+')" style="background:none;border:none;color:var(--re);cursor:pointer;font-size:16px;padding:4px;">🗑</button>'
+      +'</div>';
+    container.appendChild(div);
+  });
+  document.getElementById('stock-total-pairs').textContent=totalPairs;
+  document.getElementById('stock-total-price').textContent=totalPrice.toFixed(2)+'€';
+}
+
+window.removeStockCart=function(id){ _stockCart=_stockCart.filter(i=>i.id!==id); updateStockCartUI(); };
+
+document.getElementById('stock-save-btn').addEventListener('click',async()=>{
+  if(!_stockCart.length) return;
+  const btn=document.getElementById('stock-save-btn');
+  btn.textContent='Guardando...'; btn.disabled=true;
+  try{
+    await fetch(STOCK_API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action:'addStockBulk',cart:_stockCart})});
+    const total=_stockCart.reduce((a,c)=>a+c.sizes.length,0);
+    setStockStatus(total+' pares añadidos al stock','ok');
+    _stockCart=[]; updateStockCartUI(); _stockData=null;
+    toast(total+' pares guardados','ok');
+    setTimeout(()=>setStockStatus('',''),3000);
+  }catch(e){
+    setStockStatus('Error al guardar','err');
+  }
+  btn.textContent='Guardar todo el stock'; btn.disabled=false;
+});
+
+['stock-price','stock-new-product','stock-new-color'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('input',checkStockValidity);
+});
+
+document.getElementById('btn-stock').addEventListener('click',showStock);
+document.getElementById('d-stock').addEventListener('click',()=>{showStock();closeDrawer();});
+document.getElementById('stock-back-btn').addEventListener('click',()=>{
+  if(view==='stock'){ if(saleMsgs.length>0) showSales(); else showEmpty(); }
+});
 
 init();
 </script>
