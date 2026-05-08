@@ -917,6 +917,16 @@ async function sendAccMsg(){
 }
 
 // ── SALES CHAT ────────────────────────────────────────────────────────────────
+let _delMsgTs = null;
+function askDelMsg(ts){ _delMsgTs=ts; document.getElementById('del-msg-bar').style.display='flex'; }
+function cancelDelMsg(){ _delMsgTs=null; document.getElementById('del-msg-bar').style.display='none'; }
+function confirmDelMsg(){
+  if(_delMsgTs===null) return;
+  saleMsgs=saleMsgs.filter(m=>m.ts!==_delMsgTs);
+  POST({action:'deleteSaleMsg',ts:_delMsgTs}).catch(()=>{});
+  cancelDelMsg(); renderSaleMsgs();
+}
+
 function addLongPress(el, ts){
   let timer = null;
   el.addEventListener('touchstart', ()=>{ timer=setTimeout(()=>askDelMsg(ts), 600); }, {passive:true});
