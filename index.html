@@ -1286,9 +1286,6 @@ function pad(n){return String(n).padStart(2,'0');}
 
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 document.getElementById('menu-btn').addEventListener('click',openDrawer);
-document.getElementById('btn-stock').addEventListener('click',showStock);
-document.getElementById('d-stock').addEventListener('click',()=>{showStock();closeDrawer();});
-document.getElementById('stock-back-btn').addEventListener('click',()=>{ if(saleMsgs.length>0||view==='sales') showSales(); else showEmpty(); });
 document.getElementById('dov').addEventListener('click',closeDrawer);
 document.getElementById('btn-new').addEventListener('click',createAccount);
 document.getElementById('btn-sales').addEventListener('click',showSales);
