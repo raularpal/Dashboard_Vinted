@@ -215,7 +215,7 @@ textarea.inp::placeholder{color:var(--t3);}
 <body>
 
 <div id="loading">
-  <div class="spin" style="width:40px;height:40px;border-width:3.5px;border-top-color:var(--ac);border-color:var(--adim);"></div>
+  <div class="spin" style="width:44px;height:44px;border-width:3.5px;border-top-color:var(--ac);border-color:rgba(9,201,122,.25);"></div>
   <h2>Vinted HQ</h2>
   <p id="load-msg">Conectando con Sheets...</p>
 </div>
@@ -791,120 +791,96 @@ document.getElementById('img-in').addEventListener('change', async function(){
 async function sendAccMsg(){
   const ta=document.getElementById('c-ta'); const txt=ta.value.trim();
   if(!txt||!curId) return;
-
   const now=new Date(); const ts=Date.now();
   const time=pad(now.getHours())+':'+pad(now.getMinutes());
   if(!accMsgs[curId]) accMsgs[curId]=[];
   const ae=accounts.find(x=>x.id===curId);
 
   // Error Adidas Spezial Brown 40 40€ → undo venta
-  const errorVenta = parseErrorVenta(txt);
+  const errorVenta=parseErrorVenta(txt);
   if(errorVenta){
     accMsgs[curId].push({type:'text',text:txt,time,ts});
-    POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
-      type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
+    POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
     ta.value=''; ta.style.height='auto'; renderAccMsgs();
     try{
       const res=await POST({action:'undoVenta',product:errorVenta.product,color:errorVenta.color,size:errorVenta.size,price:errorVenta.price});
-      const msg=res.ok
-        ?'Venta deshecha: '+errorVenta.product+' '+errorVenta.color+' T.'+errorVenta.size+' vuelve a Available'
-        :'Error: '+(res.error||'no encontrado');
+      const msg=res.ok?'Venta deshecha: '+errorVenta.product+' '+errorVenta.color+' T.'+errorVenta.size+' vuelve a Available':'Error: '+(res.error||'no encontrado');
       accMsgs[curId].push({type:'system',text:msg,time,ts:ts+1});
-      POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
-        type:'system',text:JSON.stringify({type:'system',text:msg,time,ts:ts+1}),time,ts:ts+1}).catch(()=>{});
-    }catch(e){
-      accMsgs[curId].push({type:'system',text:'Error: '+e.message,time,ts:ts+1});
+      POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'system',text:JSON.stringify({type:'system',text:msg,time,ts:ts+1}),time,ts:ts+1}).catch(()=>{});
+    }catch(e){ accMsgs[curId].push({type:'system',text:'Error: '+e.message,time,ts:ts+1}); }
+    renderAccMsgs(); buildDrawer(); renderChatHeader(); return;
+  }
+
+  // error → desmarcar último publicado
+  if(isErrorCmd(txt)){
+    const last=lastAutoMarked[curId];
+    accMsgs[curId].push({type:'text',text:txt,time,ts});
+    POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
+    ta.value=''; ta.style.height='auto';
+    if(last){
+      try{
+        await POST({action:'desmarcarPublicado',product:last.product,color:last.color,size:last.size});
+        const dm={type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1};
+        accMsgs[curId].push(dm);
+        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'system',text:JSON.stringify(dm),time,ts:ts+1}).catch(()=>{});
+        delete lastAutoMarked[curId];
+      }catch(e){ accMsgs[curId].push({type:'system',text:'Error al desmarcar',time,ts:ts+1}); }
+    } else {
+      accMsgs[curId].push({type:'system',text:'No hay ninguno marcado recientemente',time,ts:ts+1});
     }
-    renderAccMsgs(); buildDrawer(); renderChatHeader();
+    renderAccMsgs(); buildDrawer(); renderChatHeader(); return;
+  }
+
+  // publicado X Y Z → marcar manualmente
+  if(isPublicadoCmd(txt)){
+    const p=parsePublicado(txt);
+    if(p){
+      accMsgs[curId].push({type:'text',text:txt,time,ts});
+      ta.value=''; ta.style.height='auto'; renderAccMsgs();
+      try{
+        const res=await POST({action:'marcarPublicado',product:p.product,color:p.color,size:p.size});
+        accMsgs[curId].push({type:'system',text:res.ok?'Marcado: '+p.product+' '+p.color+' T.'+p.size:'Error: '+res.error,time,ts:ts+1});
+      }catch(e){ accMsgs[curId].push({type:'system',text:'Sin conexion',time,ts:ts+1}); }
+      renderAccMsgs(); buildDrawer(); renderChatHeader();
+    }
     return;
   }
 
-  if(isErrorCmd(txt)){
-      const last=lastAutoMarked[curId];
-      const errTxtMsg={type:'text',text:txt,time,ts};
-      accMsgs[curId].push(errTxtMsg);
-      const ae=accounts.find(x=>x.id===curId);
-      POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
-        type:'text',text:JSON.stringify(errTxtMsg),time,ts}).catch(()=>{});
-      ta.value=''; ta.style.height='auto';
-      if(last){
-        try{
-          await POST({action:'desmarcarPublicado',product:last.product,color:last.color,size:last.size});
-          const desmarcMsg={type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1};
-          accMsgs[curId].push(desmarcMsg);
-          const ad=accounts.find(x=>x.id===curId);
-          POST({action:'saveMessage',accountId:curId,accountName:ad?ad.name:'',
-            type:'system',text:JSON.stringify(desmarcMsg),time,ts:ts+1}).catch(()=>{});
-          delete lastAutoMarked[curId];
-        }catch(e){
-          accMsgs[curId].push({type:'system',text:'Error al desmarcar',time,ts:ts+1});
-        }
-      } else {
-        accMsgs[curId].push({type:'system',text:'No hay ninguno marcado recientemente',time,ts:ts+1});
-      }
-      renderAccMsgs(); buildDrawer(); renderChatHeader();
-      return;
-    }
-
-    if(isPublicadoCmd(txt)){
-      const p=parsePublicado(txt);
-      if(p){
-        accMsgs[curId].push({type:'text',text:txt,time,ts});
-        ta.value=''; ta.style.height='auto'; renderAccMsgs();
-        try{
-          const res=await POST({action:'marcarPublicado',product:p.product,color:p.color,size:p.size});
-          accMsgs[curId].push({type:'system',text:res.ok?'Marcado: '+p.product+' '+p.color+' T.'+p.size:'Error: '+res.error,time,ts:ts+1});
-        }catch(e){
-          accMsgs[curId].push({type:'system',text:'Sin conexion',time,ts:ts+1});
-        }
-        renderAccMsgs(); buildDrawer(); renderChatHeader();
-      }
-      return;
-    }
-
-    if(isFotoQuery(txt)){
-      accMsgs[curId].push({type:'text',text:txt,time,ts});
-      const searchId='s'+ts;
-      accMsgs[curId].push({type:'searching',id:searchId,text:'Buscando stock...',time,ts:ts+1});
-      ta.value=''; ta.style.height='auto'; renderAccMsgs();
-      try{
-        const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
-        const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
-        if(res.ok&&res.results&&res.results.length>0){
-          const first=res.results[0];
-          const fotosMsg={type:'fotos',results:[first],query:txt,time,ts:ts+1,autoMarked:first};
-          accMsgs[curId][idx]=fotosMsg;
-          lastAutoMarked[curId]=first;
-          renderAccMsgs();
-          // Save to Sheets
-          const a=accounts.find(x=>x.id===curId);
-          POST({action:'saveMessage',accountId:curId,accountName:a?a.name:'',
-            type:'fotos',text:JSON.stringify(fotosMsg),time,ts:ts+1}).catch(()=>{});
-          await POST({action:'marcarPublicado',product:first.product,color:first.color,size:first.size}).catch(()=>{});
-        } else {
-            const sysMsg={type:'system',text:res.msg||res.error||'No hay stock disponible',time,ts:ts+1};
-          accMsgs[curId][idx]=sysMsg;
-          renderAccMsgs();
-          const a2=accounts.find(x=>x.id===curId);
-          POST({action:'saveMessage',accountId:curId,accountName:a2?a2.name:'',
-            type:'system',text:JSON.stringify(sysMsg),time,ts:ts+1}).catch(()=>{});
-        }
-      }catch(e){
-        const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
-        accMsgs[curId][idx]={type:'system',text:'Error: '+e.message,time,ts:ts+1};
+  // adidas / birkenstock / shoes → buscar stock
+  if(isFotoQuery(txt)){
+    accMsgs[curId].push({type:'text',text:txt,time,ts});
+    const searchId='s'+ts;
+    accMsgs[curId].push({type:'searching',id:searchId,text:'Buscando stock...',time,ts:ts+1});
+    ta.value=''; ta.style.height='auto'; renderAccMsgs();
+    try{
+      const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
+      const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
+      if(res.ok&&res.results&&res.results.length>0){
+        const first=res.results[0];
+        const fotosMsg={type:'fotos',results:[first],query:txt,time,ts:ts+1,autoMarked:first};
+        accMsgs[curId][idx]=fotosMsg;
+        lastAutoMarked[curId]=first;
         renderAccMsgs();
+        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'fotos',text:JSON.stringify(fotosMsg),time,ts:ts+1}).catch(()=>{});
+        await POST({action:'marcarPublicado',product:first.product,color:first.color,size:first.size}).catch(()=>{});
+      } else {
+        const sysMsg={type:'system',text:res.msg||res.error||'No hay stock disponible',time,ts:ts+1};
+        accMsgs[curId][idx]=sysMsg;
+        renderAccMsgs();
+        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'system',text:JSON.stringify(sysMsg),time,ts:ts+1}).catch(()=>{});
       }
-      buildDrawer(); renderChatHeader();
-      return;
+    }catch(e){
+      const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
+      accMsgs[curId][idx]={type:'system',text:'Error: '+e.message,time,ts:ts+1};
+      renderAccMsgs();
     }
-  const now=new Date(); const ts=Date.now();
-  const time=pad(now.getHours())+':'+pad(now.getMinutes());
-  const a=accounts.find(x=>x.id===curId);
-  if(!accMsgs[curId]) accMsgs[curId]=[];
+    buildDrawer(); renderChatHeader(); return;
+  }
+
+  // Mensaje de texto normal
   const msg={type:'text',text:txt,time,ts};
   accMsgs[curId].push(msg);
-  POST({action:'saveMessage',accountId:curId,accountName:a?a.name:'',
-    type:'text',text:JSON.stringify(msg),time,ts}).catch(()=>{});
+  POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'text',text:JSON.stringify(msg),time,ts}).catch(()=>{});
   ta.value=''; ta.style.height='auto';
   buildDrawer(); renderChatHeader(); renderAccMsgs();
 }
