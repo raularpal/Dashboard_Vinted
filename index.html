@@ -856,13 +856,15 @@ async function sendAccMsg(){
       const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
       const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
       if(res.ok&&res.results&&res.results.length>0){
-        const first=res.results[0];
-        const fotosMsg={type:'fotos',results:[first],query:txt,time,ts:ts+1,autoMarked:first};
+        const shown=res.results.slice(0,3);
+        const fotosMsg={type:'fotos',results:shown,query:txt,time,ts:ts+1,autoMarked:shown[0]};
         accMsgs[curId][idx]=fotosMsg;
-        lastAutoMarked[curId]=first;
+        lastAutoMarked[curId]=shown[0];
         renderAccMsgs();
         POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'fotos',text:JSON.stringify(fotosMsg),time,ts:ts+1}).catch(()=>{});
-        await POST({action:'marcarPublicado',product:first.product,color:first.color,size:first.size}).catch(()=>{});
+        for(const r of shown){
+          await POST({action:'marcarPublicado',product:r.product,color:r.color,size:r.size}).catch(()=>{});
+        }
       } else {
         const sysMsg={type:'system',text:res.msg||res.error||'No hay stock disponible',time,ts:ts+1};
         accMsgs[curId][idx]=sysMsg;
