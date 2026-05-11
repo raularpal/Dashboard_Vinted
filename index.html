@@ -792,36 +792,34 @@ async function sendAccMsg(){
   const ta=document.getElementById('c-ta'); const txt=ta.value.trim();
   if(!txt||!curId) return;
 
-  // Si es búsqueda de fotos o comando publicado → misma lógica que chat ventas
-  if(isFotoQuery(txt)||isPublicadoCmd(txt)){
-    const now=new Date(); const ts=Date.now();
-    const time=pad(now.getHours())+':'+pad(now.getMinutes());
-    if(!accMsgs[curId]) accMsgs[curId]=[];
+  const now=new Date(); const ts=Date.now();
+  const time=pad(now.getHours())+':'+pad(now.getMinutes());
+  if(!accMsgs[curId]) accMsgs[curId]=[];
+  const ae=accounts.find(x=>x.id===curId);
 
-    // Error Adidas Spezial Brown 40 40€ → undo venta
-    const errorVenta = parseErrorVenta(txt);
-    if(errorVenta){
-      accMsgs[curId].push({type:'text',text:txt,time,ts});
-      const ae=accounts.find(x=>x.id===curId);
+  // Error Adidas Spezial Brown 40 40€ → undo venta
+  const errorVenta = parseErrorVenta(txt);
+  if(errorVenta){
+    accMsgs[curId].push({type:'text',text:txt,time,ts});
+    POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
+      type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
+    ta.value=''; ta.style.height='auto'; renderAccMsgs();
+    try{
+      const res=await POST({action:'undoVenta',product:errorVenta.product,color:errorVenta.color,size:errorVenta.size,price:errorVenta.price});
+      const msg=res.ok
+        ?'Venta deshecha: '+errorVenta.product+' '+errorVenta.color+' T.'+errorVenta.size+' vuelve a Available'
+        :'Error: '+(res.error||'no encontrado');
+      accMsgs[curId].push({type:'system',text:msg,time,ts:ts+1});
       POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
-        type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
-      ta.value=''; ta.style.height='auto'; renderAccMsgs();
-      try{
-        const res=await POST({action:'undoVenta',product:errorVenta.product,color:errorVenta.color,size:errorVenta.size,price:errorVenta.price});
-        const msg=res.ok
-          ?'Venta deshecha: '+errorVenta.product+' '+errorVenta.color+' T.'+errorVenta.size+' vuelve a Available'
-          :'Error: '+(res.error||'no encontrado');
-        accMsgs[curId].push({type:'system',text:msg,time,ts:ts+1});
-        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',
-          type:'system',text:JSON.stringify({type:'system',text:msg,time,ts:ts+1}),time,ts:ts+1}).catch(()=>{});
-      }catch(e){
-        accMsgs[curId].push({type:'system',text:'Error: '+e.message,time,ts:ts+1});
-      }
-      renderAccMsgs(); buildDrawer(); renderChatHeader();
-      return;
+        type:'system',text:JSON.stringify({type:'system',text:msg,time,ts:ts+1}),time,ts:ts+1}).catch(()=>{});
+    }catch(e){
+      accMsgs[curId].push({type:'system',text:'Error: '+e.message,time,ts:ts+1});
     }
+    renderAccMsgs(); buildDrawer(); renderChatHeader();
+    return;
+  }
 
-    if(isErrorCmd(txt)){
+  if(isErrorCmd(txt)){
       const last=lastAutoMarked[curId];
       const errTxtMsg={type:'text',text:txt,time,ts};
       accMsgs[curId].push(errTxtMsg);
@@ -899,7 +897,6 @@ async function sendAccMsg(){
       buildDrawer(); renderChatHeader();
       return;
     }
-  }
   const now=new Date(); const ts=Date.now();
   const time=pad(now.getHours())+':'+pad(now.getMinutes());
   const a=accounts.find(x=>x.id===curId);
@@ -1074,6 +1071,23 @@ function isPublicadoCmd(txt){
 }
 function isErrorCmd(txt){
   return txt.toLowerCase().trim() === 'error';
+}
+function parseErrorVenta(txt){
+  // "Error Adidas Spezial Brown 40 40€"
+  const t = txt.trim();
+  if(!t.toLowerCase().startsWith('error ')) return null;
+  const rest = t.slice(6).trim();
+  const pm = rest.match(/(\d+(?:[.,]\d+)?)\s*€?\s*$/);
+  if(!pm) return null;
+  const price = parseFloat(pm[1].replace(',','.'));
+  const wp = rest.slice(0, rest.lastIndexOf(pm[0])).trim();
+  const parts = wp.split(/\s+/);
+  if(parts.length < 3) return null;
+  const size = parts[parts.length-1];
+  const color = parts[parts.length-2];
+  const product = parts.slice(0, parts.length-2).join(' ');
+  if(!product||!color||!size||isNaN(price)) return null;
+  return {product, color, size, price};
 }
 function parsePublicado(txt){
   // "publicado Adidas Spezial Pink 37" → {product, color, size}
