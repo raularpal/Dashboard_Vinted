@@ -310,7 +310,6 @@ textarea.inp::placeholder{color:var(--t3);}
       <div class="sb-inf"><h3>Chat de ventas</h3><p>etiquetas · ventas</p></div>
       <div class="sb-r">
         <button class="sb-btn red" id="s-clear-btn">🗑</button>
-        <a href="https://drive.google.com/drive/folders/1KWcRGMdGopg4xAvaW9tNOfXCAL-EsSp0?usp=share_link" target="_blank" class="sb-btn" style="color:var(--bl);border-color:rgba(55,138,221,.3);text-decoration:none;">📁 Fotos</a>
         <button class="sh-btn" id="s-sheets-btn">
           <div class="sdot on" id="sdot"></div>
           <span id="sheets-lbl">Sheets ✓</span>
@@ -493,14 +492,21 @@ async function POST(body){
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
-async function GET(params){
+async function GET(params, retries=2){
   const qs=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  const r=await Promise.race([
-    fetch(SURL+'?'+qs),
-    new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),20000))
-  ]);
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
+  for(let i=0;i<=retries;i++){
+    try{
+      const r=await Promise.race([
+        fetch(SURL+'?'+qs),
+        new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),20000))
+      ]);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    }catch(e){
+      if(i===retries) throw e;
+      await new Promise(r=>setTimeout(r,1500));
+    }
+  }
 }
 
 // ── FILE TO B64 ───────────────────────────────────────────────────────────────
@@ -523,20 +529,21 @@ async function uploadToDrive(file){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init(){
-  setLoadMsg('Cargando cuentas...');
+  setLoadMsg('Conectando...');
   try{
-    const ar=await GET({action:'getAccounts'});
+    // Lanzar las 3 llamadas en paralelo — mucho más rápido que en serie
+    const [ar, er, mr] = await Promise.all([
+      GET({action:'getAccounts'}),
+      GET({action:'getEmails'}).catch(()=>({ok:false})),
+      GET({action:'getMessages'})
+    ]);
+
     if(ar.ok&&ar.accounts&&ar.accounts.length){
       accounts=ar.accounts;
       nextNum=Math.max(...accounts.map(a=>parseInt(a.name)||0),accounts.length)+1;
     }
-    // Load emails from Cuentas sheet
-    try{
-      const er=await GET({action:'getEmails'});
-      if(er.ok&&er.emails) accEmails=er.emails;
-    }catch(e){}
-    setLoadMsg('Cargando mensajes...');
-    const mr=await GET({action:'getMessages'});
+    if(er.ok&&er.emails) accEmails=er.emails;
+
     if(mr.ok){
       const now=Date.now();
       accounts.forEach(a=>{accMsgs[a.id]=[];});
@@ -550,7 +557,6 @@ async function init(){
           if(!accMsgs[m.accountId]) accMsgs[m.accountId]=[];
           try{
             const parsed=JSON.parse(m.text);
-            // Restore fotos/system messages properly
             accMsgs[m.accountId].push(parsed);
           }catch(e){
             accMsgs[m.accountId].push({type:m.type||'text',text:m.text,time:m.time,ts:m.ts});
@@ -561,7 +567,10 @@ async function init(){
     setSyncBadge('ok');
   }catch(e){
     setSyncBadge('err');
-    toast('Sin conexión — modo offline','err');
+    toast('Sin conexión — reintentando...','err');
+    // Reintento automático tras 4 segundos
+    setTimeout(()=>{ hideLoading(); buildDrawer(); showSales(); init(); }, 4000);
+    return;
   }
   hideLoading(); buildDrawer(); showSales();
 }
