@@ -492,21 +492,14 @@ async function POST(body){
   if(!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }
-async function GET(params, retries=2){
+async function GET(params){
   const qs=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  for(let i=0;i<=retries;i++){
-    try{
-      const r=await Promise.race([
-        fetch(SURL+'?'+qs),
-        new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),20000))
-      ]);
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.json();
-    }catch(e){
-      if(i===retries) throw e;
-      await new Promise(r=>setTimeout(r,1500));
-    }
-  }
+  const r=await Promise.race([
+    fetch(SURL+'?'+qs),
+    new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),20000))
+  ]);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
 }
 
 // ── FILE TO B64 ───────────────────────────────────────────────────────────────
@@ -529,21 +522,20 @@ async function uploadToDrive(file){
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init(){
-  setLoadMsg('Conectando...');
+  setLoadMsg('Cargando cuentas...');
   try{
-    // Lanzar las 3 llamadas en paralelo — mucho más rápido que en serie
-    const [ar, er, mr] = await Promise.all([
-      GET({action:'getAccounts'}),
-      GET({action:'getEmails'}).catch(()=>({ok:false})),
-      GET({action:'getMessages'})
-    ]);
-
+    const ar=await GET({action:'getAccounts'});
     if(ar.ok&&ar.accounts&&ar.accounts.length){
       accounts=ar.accounts;
       nextNum=Math.max(...accounts.map(a=>parseInt(a.name)||0),accounts.length)+1;
     }
-    if(er.ok&&er.emails) accEmails=er.emails;
-
+    // Load emails from Cuentas sheet
+    try{
+      const er=await GET({action:'getEmails'});
+      if(er.ok&&er.emails) accEmails=er.emails;
+    }catch(e){}
+    setLoadMsg('Cargando mensajes...');
+    const mr=await GET({action:'getMessages'});
     if(mr.ok){
       const now=Date.now();
       accounts.forEach(a=>{accMsgs[a.id]=[];});
@@ -557,6 +549,7 @@ async function init(){
           if(!accMsgs[m.accountId]) accMsgs[m.accountId]=[];
           try{
             const parsed=JSON.parse(m.text);
+            // Restore fotos/system messages properly
             accMsgs[m.accountId].push(parsed);
           }catch(e){
             accMsgs[m.accountId].push({type:m.type||'text',text:m.text,time:m.time,ts:m.ts});
@@ -567,10 +560,7 @@ async function init(){
     setSyncBadge('ok');
   }catch(e){
     setSyncBadge('err');
-    toast('Sin conexión — reintentando...','err');
-    // Reintento automático tras 4 segundos
-    setTimeout(()=>{ hideLoading(); buildDrawer(); showSales(); init(); }, 4000);
-    return;
+    toast('Sin conexión — modo offline','err');
   }
   hideLoading(); buildDrawer(); showSales();
 }
@@ -1181,22 +1171,63 @@ async function sendSaleMsg(){
 async function doSyncVenta(id){
   const m=saleMsgs.find(x=>x.id===id); if(!m) return;
   showSOv('l','Guardando en Sheets...','Buscando '+m.product+' '+m.color+' T.'+m.size);
-  try{
-    const res=await POST({numCuenta:m.numCuenta,product:m.product,color:m.color,size:m.size,price:m.price});
-    if(res.ok){
-      m.syncStatus='ok';
-      renderSaleMsgs();
-      POST({action:'saveMessage',accountId:'__sales__',accountName:'sales',
-        type:'venta',text:JSON.stringify({...m,syncStatus:'ok'}),time:m.time,ts:m.ts}).catch(()=>{});
-      showSOv('s','✓ Guardado en Sheets',
-        m.product+' '+m.color+' T.'+m.size+'\nComprador: '+res.email+'\nPrecio: '+res.price+'€'
-        +(m.labelUrl?'\n📎 Etiqueta guardada':''));
-    } else { throw new Error(res.error||'error'); }
-  }catch(e){
-    const err=e.message==='timeout'?'Timeout. Comprueba conexión.':
-      e.message.includes('fetch')||e.message.includes('Network')?'Sin conexión.':'Error: '+e.message;
-    m.syncStatus='error'; m.syncError=err;
-    renderSaleMsgs(); showSOv('e','No se pudo guardar',err);
+
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [2000, 4000, 7000]; // espera creciente entre intentos
+
+  for(let attempt=0; attempt<MAX_RETRIES; attempt++){
+    try{
+      if(attempt>0){
+        showSOv('l','Reintentando ('+(attempt+1)+'/'+MAX_RETRIES+')...','Buscando '+m.product+' '+m.color+' T.'+m.size);
+        await new Promise(r=>setTimeout(r, RETRY_DELAYS[attempt-1]));
+      }
+
+      const res=await POST({numCuenta:m.numCuenta,product:m.product,color:m.color,size:m.size,price:m.price});
+
+      if(res.ok){
+        m.syncStatus='ok'; m.syncEmail=res.email; m.syncPrice=res.price;
+        renderSaleMsgs();
+        // Guardar estado con reintentos silenciosos
+        const saveOk = async () => {
+          for(let i=0;i<3;i++){
+            try{
+              await POST({action:'saveMessage',accountId:'__sales__',accountName:'sales',
+                type:'venta',text:JSON.stringify({...m,syncStatus:'ok'}),time:m.time,ts:m.ts});
+              return;
+            }catch(e){ await new Promise(r=>setTimeout(r,2000)); }
+          }
+        };
+        saveOk();
+        showSOv('s','✓ Guardado en Sheets',
+          m.product+' '+m.color+' T.'+m.size+'\nComprador: '+res.email+'\nPrecio: '+res.price+'€'
+          +(m.labelUrl?'\n📎 Etiqueta guardada':''));
+        return; // éxito, salir del loop
+      } else {
+        // Error de lógica (no hay stock, cuenta no encontrada...) — no reintentar
+        throw new Error('__noretrry__:' + (res.error||'error'));
+      }
+
+    }catch(e){
+      // Error de lógica → mostrar directamente sin reintentar
+      if(e.message.startsWith('__noretrry__:')){
+        const err = e.message.replace('__noretrry__:','');
+        m.syncStatus='error'; m.syncError=err;
+        renderSaleMsgs(); showSOv('e','No se pudo guardar', err);
+        return;
+      }
+
+      // Último intento fallido
+      if(attempt===MAX_RETRIES-1){
+        const err = e.message==='timeout'
+          ? 'Timeout tras '+MAX_RETRIES+' intentos. Pulsa reintentar.'
+          : e.message.includes('fetch')||e.message.includes('Network')
+            ? 'Sin conexión tras '+MAX_RETRIES+' intentos.'
+            : 'Error: '+e.message;
+        m.syncStatus='error'; m.syncError=err;
+        renderSaleMsgs(); showSOv('e','No se pudo guardar', err);
+      }
+      // Si no es el último, el loop continúa con el siguiente intento
+    }
   }
 }
 async function retrySale(id){
