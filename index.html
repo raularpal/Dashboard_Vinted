@@ -1152,7 +1152,8 @@ async function sendSaleMsg(){
     const id='v'+ts;
     const labelUrl=pendingFile?pendingFile.viewUrl:'';
     const labelName=pendingFile?pendingFile.name:'';
-    const msg={id,type:'venta',raw:txt,...parsed,time,ts,syncStatus:'syncing',syncError:'',labelUrl,labelName};
+    const ventaId='v_'+ts+'_'+Math.random().toString(36).slice(2,7);
+    const msg={id,type:'venta',raw:txt,...parsed,time,ts,syncStatus:'syncing',syncError:'',labelUrl,labelName,ventaId};
     saleMsgs.push(msg);
     pendingFile=null;
     ta.value=''; ta.style.height='auto';
@@ -1182,7 +1183,7 @@ async function doSyncVenta(id){
         await new Promise(r=>setTimeout(r, RETRY_DELAYS[attempt-1]));
       }
 
-      const res=await POST({numCuenta:m.numCuenta,product:m.product,color:m.color,size:m.size,price:m.price});
+      const res=await POST({numCuenta:m.numCuenta,product:m.product,color:m.color,size:m.size,price:m.price,ventaId:m.ventaId||m.id});
 
       if(res.ok){
         m.syncStatus='ok'; m.syncEmail=res.email; m.syncPrice=res.price;
