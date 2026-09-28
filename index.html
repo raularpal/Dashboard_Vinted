@@ -268,6 +268,7 @@ textarea.inp::placeholder{color:var(--t3);}
 
 /* ── Stock panel ── */
 #stock-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px 16px calc(16px + var(--sb));display:flex;flex-direction:column;gap:16px;}
+.st-status.err{cursor:pointer;}
 .st-status{padding:10px 14px;border-radius:var(--r);font-size:13px;font-family:monospace;text-align:center;}
 .st-status.am{background:var(--amdim);color:var(--am);border:1px solid rgba(239,159,39,.2);}
 .st-status.ok{background:var(--adim);color:var(--ac);border:1px solid rgba(9,201,122,.2);}
@@ -573,7 +574,8 @@ const SALES_ID       = '__sales__';
 const ACCOUNTS_ROW   = '__accounts__';
 const DEFAULT_SIZES  = ['36','37','38','39','40','41','42','43','44'];
 
-const GET_TIMEOUT     = 20000;
+const GET_TIMEOUT     = 30000;
+const STOCK_TIMEOUT   = 60000;               // getStockData recorre todas las hojas (~650 KB)
 const POST_TIMEOUT    = 25000;
 const VENTA_TIMEOUT   = 40000;               // Margen extra: un timeout + reintento mientras el primero sigue en curso es lo que puede duplicar
 const UPLOAD_TIMEOUT  = 60000;               // Las fotos en base64 desde móvil pueden tardar
@@ -698,7 +700,7 @@ const Api = {
 
   // Panel de stock (despliegue STOCK_API)
   async getStock(){
-    const data = await request(STOCK_API, {}, {timeout: GET_TIMEOUT});
+    const data = await withRetry(() => request(STOCK_API, {}, {timeout: STOCK_TIMEOUT}), GET_RETRY_DELAYS);
     if (data && data.error) throw new ApiError('logic', data.error);
     return data;
   },
@@ -1722,7 +1724,9 @@ function loadStockData({silent = false} = {}){
     if (!silent) setStockStatus('', '');
     if (!silent || !stock.product) renderStockProducts();
   }, e => {
-    if (!silent) setStockStatus(isNetErr(e) ? 'Sin conexión — no se pudieron cargar los datos' : 'Error al cargar datos: ' + e.message, 'err');
+    if (!silent) setStockStatus((isNetErr(e)
+      ? (e.message === 'timeout' ? 'El servidor tarda demasiado' : 'Sin conexión') + ' — toca aquí para reintentar'
+      : 'Error al cargar datos: ' + e.message + ' — toca aquí para reintentar'), 'err');
   }).finally(() => { stock.loading = null; });
   return stock.loading;
 }
@@ -1927,6 +1931,7 @@ $('stock-cart-items').addEventListener('click', e => {
 });
 $('stock-add-cart-btn').addEventListener('click', addToCart);
 $('stock-save-btn').addEventListener('click', saveStock);
+$('stock-status').addEventListener('click', () => { if (!stock.data && !stock.loading) loadStockData(); });
 for (const id of ['stock-price', 'stock-new-product', 'stock-new-color']) $(id).addEventListener('input', checkStockValidity);
 
 $('btn-stock').addEventListener('click', showStock);
