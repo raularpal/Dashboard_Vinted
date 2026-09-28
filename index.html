@@ -2,10 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Vinted HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://script.google.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -19,34 +22,52 @@
   --r:12px;
   --st:env(safe-area-inset-top,0px);
   --sb:env(safe-area-inset-bottom,0px);
+  --sl:env(safe-area-inset-left,0px);
+  --sr:env(safe-area-inset-right,0px);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+[hidden]{display:none!important;}
 html,body{height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;background:var(--bg);}
-body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:column;font-size:16px;}
+body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:column;font-size:16px;padding-left:var(--sl);padding-right:var(--sr);}
+
+/* ── Tap targets: amplía el área táctil a 44px sin cambiar el tamaño visual ── */
+.tb-btn,#d-new,.d-grip,.d-del,.sb-btn,.sh-btn,.vc-retry,.fc-link,.cart-del,.cfm-btn,.spill,#d-stock{position:relative;}
+.tb-btn::after,#d-new::after,.d-grip::after,.d-del::after,.sb-btn::after,.sh-btn::after,.vc-retry::after,
+.fc-link::after,.cart-del::after,.cfm-btn::after,.spill::after,#d-stock::after,#lb-x::after,.ss-minus::after{
+  content:'';position:absolute;top:50%;left:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%);
+}
+
+/* ── Feedback inmediato al pulsar ── */
+.tb-btn,.sb-btn,.sh-btn,.inp-ico,.cfm-btn,.mo-btn,.emp-cta,.vc-retry,#d-sales,#d-stock,#d-new,#sov-close,#lb-x,.st-btn,.fc-link,.cart-del,.fbub.clickable{transition:transform .1s ease,background-color .12s ease,opacity .12s ease;}
+.tb-btn:active,.sb-btn:active,.sh-btn:active,.inp-ico:active,.cfm-btn:active,.mo-btn:active,.emp-cta:active,.vc-retry:active,
+#d-sales:active,#d-stock:active,#d-new:active,#sov-close:active,#lb-x:active,.st-btn:active,.spill:active,.ssize:active,.fc-link:active,.cart-del:active,.fbub.clickable:active{transform:scale(.96);}
+.inp-ico.send:active{transform:scale(.92);}
+.st-btn:disabled{transform:none;}
 
 #tb{display:flex;align-items:center;gap:8px;padding:calc(10px + var(--st)) 12px 10px;background:var(--bg2);border-bottom:1px solid var(--b1);flex-shrink:0;z-index:10;}
 #tb-title{font-size:17px;font-weight:700;color:var(--ac);flex:1;}
 .tb-btn{background:none;border:1px solid var(--b2);border-radius:10px;color:var(--t2);width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+.tb-btn.plain{border:none;}
 .tb-btn:active{background:var(--bg3);}
 .tb-btn.on{background:var(--adim);border-color:var(--ac);color:var(--ac);}
 #tb-status{font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);background:var(--bg4);border-radius:20px;padding:3px 8px;border:1px solid var(--b1);}
 #tb-status.ok{color:var(--ac);border-color:rgba(9,201,122,.25);}
 #tb-status.err{color:var(--re);border-color:rgba(226,75,74,.25);}
 
-#dov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;}
-#dov.on{display:block;}
-#drawer{position:fixed;top:0;left:-300px;bottom:0;width:288px;background:var(--bg2);border-right:1px solid var(--b1);z-index:60;transition:left .22s ease;display:flex;flex-direction:column;padding-top:var(--st);}
-#drawer.on{left:0;}
+#dov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;opacity:0;visibility:hidden;transition:opacity .22s ease,visibility 0s linear .22s;}
+#dov.on{opacity:1;visibility:visible;transition:opacity .22s ease;}
+#drawer{position:fixed;top:0;left:0;bottom:0;width:288px;background:var(--bg2);border-right:1px solid var(--b1);z-index:60;transform:translateX(-300px);transition:transform .22s ease;will-change:transform;display:flex;flex-direction:column;padding-top:var(--st);padding-bottom:var(--sb);}
+#drawer.on{transform:translateX(0);}
 #dh{padding:20px 16px 12px;border-bottom:1px solid var(--b1);}
 #dh h2{font-size:17px;font-weight:700;color:var(--ac);}
 #dh p{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:3px;}
 #d-sec{padding:12px 10px 5px;display:flex;align-items:center;gap:6px;}
 #d-sec-lbl{font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;flex:1;}
-#d-new{background:none;border:none;cursor:pointer;color:var(--t3);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+#d-new{background:var(--adim);border:1px solid rgba(9,201,122,.25);cursor:pointer;color:var(--ac);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
 #d-new:active{background:var(--bg3);color:var(--ac);}
-#dlist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 8px 8px;}
+#dlist{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 8px 8px;}
 #dlist::-webkit-scrollbar{width:0;}
-.drow{display:flex;align-items:center;margin-bottom:3px;border-radius:var(--r);min-height:52px;transition:background .12s;}
+.drow{display:flex;align-items:center;margin-bottom:3px;border-radius:var(--r);min-height:52px;transition:background-color .12s;}
 .drow.on{background:var(--adim);}
 .drow:active{background:var(--bg3);}
 .drow.dov2{background:var(--bg4);outline:2px dashed var(--b2);}
@@ -60,7 +81,9 @@ body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:c
 .drow.hm .d-dot{display:block;}
 .d-del{background:none;border:none;cursor:pointer;color:var(--t3);width:40px;height:52px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .d-del:active{color:var(--re);}
+#d-stock{margin:0 8px 6px;background:none;border:1px solid var(--b1);border-radius:var(--r);color:var(--t2);cursor:pointer;padding:11px 14px;display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;width:calc(100% - 16px);}
 #d-sales{margin:8px;background:none;border:1px solid var(--b1);border-radius:var(--r);color:var(--t2);cursor:pointer;padding:13px 16px;display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;width:calc(100% - 16px);}
+#d-stock:active,#d-sales:active{background:var(--bg3);}
 #d-sales.on{background:var(--adim);border-color:var(--ac);color:var(--ac);}
 
 #main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
@@ -71,11 +94,14 @@ body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:c
 .emp{display:flex;flex-direction:column;align-items:center;gap:18px;padding:40px 28px;text-align:center;color:var(--t3);}
 .emp p{font-size:16px;color:var(--t2);font-weight:600;}
 .emp small{font-size:13px;font-family:'DM Mono',monospace;line-height:1.7;}
+.emp small strong{color:var(--ac);}
 .emp-cta{background:var(--ac);border:none;border-radius:var(--r);color:#000;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;padding:14px 32px;cursor:pointer;margin-top:8px;}
+.emp-cta:active{background:var(--ac2);}
 
 .sbar{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:58px;}
 .sb-av{width:38px;height:38px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:14px;font-family:'DM Mono',monospace;font-weight:700;color:var(--ac);border:1px solid var(--adim);flex-shrink:0;}
 .sb-av.sv{color:var(--bl);border-color:rgba(55,138,221,.25);background:var(--bdim);}
+.sb-av.st{color:var(--am);border-color:rgba(239,159,39,.25);background:var(--amdim);}
 .sb-inf{flex:1;min-width:0;}
 .sb-inf h3{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sb-inf p{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:1px;}
@@ -83,6 +109,8 @@ body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:c
 .sb-btn{background:none;border:1px solid var(--b1);border-radius:8px;cursor:pointer;color:var(--t3);font-size:13px;padding:6px 10px;font-family:'DM Mono',monospace;white-space:nowrap;}
 .sb-btn:active{background:var(--bg3);}
 .sb-btn.red{color:var(--re);border-color:rgba(226,75,74,.3);}
+.sb-btn.ico{text-decoration:none;font-size:16px;}
+.sb-btn.dim{opacity:.3;}
 .tag{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px;background:var(--bg4);color:var(--t3);border:1px solid var(--b1);}
 .tag.g{background:var(--adim);color:var(--ac);border-color:rgba(9,201,122,.25);}
 
@@ -90,32 +118,39 @@ body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:c
 #hint span{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;flex:1;}
 #hint code{color:var(--ac);background:var(--adim);padding:2px 7px;border-radius:6px;font-family:'DM Mono',monospace;}
 .sh-btn{background:none;border:1px solid var(--b1);border-radius:8px;color:var(--t3);font-size:11px;font-family:'DM Mono',monospace;padding:5px 9px;cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.sh-btn:active{background:var(--bg3);}
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--t3);}
 .sdot.on{background:var(--ac);}
 
-#clear-bar{display:none;padding:12px 14px;background:var(--rdim);border-bottom:1px solid rgba(226,75,74,.2);flex-shrink:0;flex-direction:column;gap:10px;}
-#clear-bar.on{display:flex;}
-#clear-bar p{font-size:13px;color:var(--re);font-family:'DM Mono',monospace;line-height:1.5;}
+/* Barras de confirmación (borrar chat / borrar mensaje) */
+.cbar{display:none;padding:12px 14px;background:var(--rdim);border-bottom:1px solid rgba(226,75,74,.2);flex-shrink:0;flex-direction:column;gap:10px;}
+.cbar.on{display:flex;}
+.cbar p{font-size:13px;color:var(--re);font-family:'DM Mono',monospace;line-height:1.5;}
+#del-msg-bar p{font-family:monospace;}
 .cfm{display:flex;gap:8px;}
 .cfm-btn{flex:1;padding:11px;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;border:none;}
 .cfm-btn.no{background:var(--bg3);color:var(--t2);}
+.cfm-btn.no:active{background:var(--bg4);}
 .cfm-btn.yes{background:var(--re);color:#fff;}
+.cfm-btn.yes:active{opacity:.85;}
 
-/* Upload progress bar */
-#upload-progress{display:none;padding:8px 14px;background:var(--amdim);border-bottom:1px solid rgba(239,159,39,.2);flex-shrink:0;align-items:center;gap:10px;}
-#upload-progress.on{display:flex;}
-#upload-progress span{font-size:12px;color:var(--am);font-family:'DM Mono',monospace;flex:1;}
-.prog-bar{height:3px;background:var(--bg4);border-radius:2px;flex:1;overflow:hidden;}
-.prog-fill{height:100%;background:var(--am);border-radius:2px;transition:width .3s;}
+/* Barra de progreso de subida (chat de cuenta) */
+.upbar{display:none;padding:8px 14px;background:var(--amdim);border-bottom:1px solid rgba(239,159,39,.2);flex-shrink:0;align-items:center;gap:10px;}
+.upbar.on{display:flex;}
+.upbar span{font-size:12px;color:var(--am);font-family:'DM Mono',monospace;flex:1;}
 
-.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px;display:flex;flex-direction:column;gap:10px;min-height:0;}
+.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 12px;display:flex;flex-direction:column;gap:10px;min-height:0;}
 .msgs::-webkit-scrollbar{width:0;}
 .msg{max-width:86%;display:flex;flex-direction:column;gap:4px;}
 .msg.out{align-self:flex-end;align-items:flex-end;}
 .msg.in{align-self:flex-start;align-items:flex-start;}
+.msg[data-lp]{-webkit-touch-callout:none;}
 .bub{padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
 .msg.out .bub{background:var(--ac);color:#000;border-bottom-right-radius:4px;}
 .msg.in .bub{background:var(--bg3);color:var(--t1);border-bottom-left-radius:4px;border:1px solid var(--b1);}
+.msg.in .bub.sys{color:var(--t2);font-family:monospace;font-size:13px;}
+.msg.in .bub.sys.net{color:var(--am);}
+.msg.in .bub.sys.err{color:var(--re);}
 .mtime{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;}
 .mnote{align-self:center;font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;padding:5px 14px;background:var(--bg3);border-radius:20px;border:1px solid var(--b1);}
 
@@ -135,9 +170,18 @@ body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:c
 
 /* Image grid for multiple photos */
 .img-grid{display:flex;flex-wrap:wrap;gap:4px;max-width:240px;border-radius:14px;overflow:hidden;border-bottom-right-radius:4px;}
-.img-grid img{width:calc(50% - 2px);aspect-ratio:1;object-fit:cover;cursor:pointer;}
+.img-grid img{width:calc(50% - 2px);aspect-ratio:1;object-fit:cover;cursor:pointer;background:var(--bg3);}
 .img-grid.single img{width:200px;height:200px;border-radius:14px;border-bottom-right-radius:4px;}
-.img-grid.one img{width:200px;border-radius:0;}
+
+/* Tarjeta de stock (fotos) */
+.fcard{background:var(--bg3);border:1px solid var(--b1);border-radius:16px;border-bottom-left-radius:4px;overflow:hidden;max-width:300px;}
+.fc-hdr{padding:10px 14px 6px;font-size:12px;color:var(--t3);font-family:monospace;border-bottom:1px solid var(--b1);}
+.fc-row{padding:8px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;}
+.fc-info{flex:1;min-width:0;}
+.fc-name{font-size:13px;font-weight:700;color:var(--t1);}
+.fc-sub{font-size:11px;color:var(--t3);font-family:monospace;margin-top:2px;}
+.fc-link{background:var(--bdim);color:var(--bl);border:1px solid rgba(55,138,221,.2);border-radius:8px;font-size:10px;font-family:monospace;padding:4px 8px;text-decoration:none;white-space:nowrap;flex-shrink:0;}
+.fc-hint{padding:8px 14px;font-size:10px;color:var(--t3);font-family:monospace;}
 
 /* Venta card */
 .vcard{background:var(--bg3);border:1px solid var(--b1);border-radius:16px;border-bottom-right-radius:4px;overflow:hidden;max-width:270px;}
@@ -152,8 +196,10 @@ body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:c
 .vc-st{font-size:11px;font-family:'DM Mono',monospace;padding:4px 9px;border-radius:20px;}
 .vc-st.ok{background:var(--adim);color:var(--ac);}
 .vc-st.err{background:var(--rdim);color:var(--re);}
+.vc-st.net{background:var(--amdim);color:var(--am);}
 .vc-st.ing{background:var(--bdim);color:var(--bl);}
 .vc-retry{background:none;border:1px solid var(--b2);border-radius:8px;color:var(--t2);font-size:11px;font-family:'DM Mono',monospace;padding:4px 9px;cursor:pointer;margin-left:auto;}
+.vc-retry:active{background:var(--bg4);}
 
 .inp-wrap{padding:10px 12px calc(10px + var(--sb));background:var(--bg2);border-top:1px solid var(--b1);flex-shrink:0;}
 .inp-row{display:flex;gap:8px;align-items:flex-end;}
@@ -164,6 +210,7 @@ body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:c
 textarea.inp{flex:1;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);color:var(--t1);font-family:'Syne',sans-serif;font-size:16px;padding:11px 14px;resize:none;min-height:44px;max-height:120px;outline:none;line-height:1.4;}
 textarea.inp::placeholder{color:var(--t3);}
 
+/* Sync overlay (no bloqueante: se cierra tocando fuera) */
 #sov{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:24px;}
 #sov.on{display:flex;}
 #sov-box{background:var(--bg2);border:1px solid var(--b2);border-radius:18px;padding:32px 24px;width:100%;max-width:300px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;}
@@ -171,11 +218,14 @@ textarea.inp::placeholder{color:var(--t3);}
 #sov-ico.l{background:var(--bdim);border:1px solid rgba(55,138,221,.25);}
 #sov-ico.s{background:var(--adim);border:1px solid rgba(9,201,122,.25);}
 #sov-ico.e{background:var(--rdim);border:1px solid rgba(226,75,74,.25);}
+#sov-ico.n{background:var(--amdim);border:1px solid rgba(239,159,39,.25);}
 #sov-title{font-size:17px;font-weight:700;}
 #sov-msg{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;line-height:1.6;white-space:pre-line;}
 #sov-close{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);color:var(--t2);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;padding:12px 32px;cursor:pointer;display:none;}
+#sov-close:active{background:var(--bg4);}
 @keyframes spin{to{transform:rotate(360deg);}}
 .spin{width:28px;height:28px;border:3px solid var(--bdim);border-top-color:var(--bl);border-radius:50%;animation:spin .8s linear infinite;}
+.spin.lg{width:44px;height:44px;border-width:3.5px;border-color:rgba(9,201,122,.25);border-top-color:var(--ac);}
 .spin-sm{width:16px;height:16px;border:2px solid rgba(239,159,39,.3);border-top-color:var(--am);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
 
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:90;align-items:flex-end;justify-content:center;}
@@ -184,52 +234,97 @@ textarea.inp::placeholder{color:var(--t3);}
 .mo-handle{width:40px;height:4px;background:var(--b2);border-radius:2px;margin:0 auto 20px;}
 .mo-box h3{font-size:18px;font-weight:700;margin-bottom:6px;}
 .mo-desc{font-size:13px;color:var(--t3);margin-bottom:18px;line-height:1.5;font-family:'DM Mono',monospace;}
+#mo-del-desc{font-size:13px;color:var(--t2);margin-top:10px;line-height:1.6;font-family:'DM Mono',monospace;}
 .fg{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.fg.mt{margin-top:16px;}
 .fl{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em;}
 .fi{background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);color:var(--t1);font-family:'Syne',sans-serif;font-size:16px;padding:12px 14px;outline:none;width:100%;}
 .fi::placeholder{color:var(--t3);}
 .mo-btns{display:flex;gap:10px;margin-top:16px;}
 .mo-btn{flex:1;padding:14px;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;border:1px solid var(--b1);}
 .mo-btn.cc{background:var(--bg3);color:var(--t2);}
+.mo-btn.cc:active{background:var(--bg4);}
 .mo-btn.ok{background:var(--ac);color:#000;border-color:var(--ac);}
+.mo-btn.ok:active{background:var(--ac2);}
 .mo-btn.dd{background:var(--rdim);color:var(--re);border-color:rgba(226,75,74,.25);}
 
 #lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:110;align-items:center;justify-content:center;}
 #lb.on{display:flex;}
 #lb img{max-width:96vw;max-height:92vh;border-radius:12px;}
-#lb-x{position:fixed;top:calc(18px + var(--st));right:18px;background:var(--bg3);border:none;border-radius:50%;color:var(--t2);font-size:22px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#lb-x{position:fixed;top:calc(18px + var(--st));right:calc(18px + var(--sr));background:var(--bg3);border:none;border-radius:50%;color:var(--t2);font-size:22px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 
 #loading{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
 #loading h2{font-size:20px;font-weight:700;color:var(--ac);}
 #loading p{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;}
 #loading.off{display:none;}
 
-.toast{position:fixed;bottom:calc(22px + var(--sb));left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:1px solid var(--b2);border-radius:30px;padding:11px 20px;font-size:13px;color:var(--t1);z-index:150;opacity:0;transition:all .28s;pointer-events:none;white-space:nowrap;font-family:'DM Mono',monospace;}
+.toast{position:fixed;bottom:calc(22px + var(--sb));left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg3);border:1px solid var(--b2);border-radius:30px;padding:11px 20px;font-size:13px;color:var(--t1);z-index:150;opacity:0;transition:opacity .28s ease,transform .28s ease;pointer-events:none;white-space:nowrap;font-family:'DM Mono',monospace;}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.ok{border-color:var(--ac);color:var(--ac);}
 .toast.err{border-color:var(--re);color:var(--re);}
+.toast.net{border-color:var(--am);color:var(--am);}
 
 #img-in,#pdf-in{display:none;}
+
+/* ── Stock panel ── */
+#stock-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px 16px calc(16px + var(--sb));display:flex;flex-direction:column;gap:16px;}
+.st-status{padding:10px 14px;border-radius:var(--r);font-size:13px;font-family:monospace;text-align:center;}
+.st-status.am{background:var(--amdim);color:var(--am);border:1px solid rgba(239,159,39,.2);}
+.st-status.ok{background:var(--adim);color:var(--ac);border:1px solid rgba(9,201,122,.2);}
+.st-status.err{background:var(--rdim);color:var(--re);border:1px solid rgba(226,75,74,.2);}
+.st-lbl{font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.st-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.st-grid.c3{grid-template-columns:repeat(3,1fr);}
+.spill{padding:11px 10px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--b1);cursor:pointer;text-align:center;font-size:13px;font-weight:600;color:var(--t1);transition:background-color .15s,border-color .15s,color .15s,transform .1s;user-select:none;-webkit-user-select:none;}
+.spill.dashed{border-style:dashed;color:var(--t3);}
+.spill.sel{background:rgba(55,138,221,.15);border:1px solid rgba(55,138,221,.5);color:var(--bl);}
+.ssize{padding:8px 6px 6px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--b1);cursor:pointer;text-align:center;position:relative;transition:background-color .15s,border-color .15s,transform .1s;user-select:none;-webkit-user-select:none;}
+.ssize.sel{background:rgba(55,138,221,.12);border-color:rgba(55,138,221,.5);}
+.ss-num{font-size:15px;font-weight:700;color:var(--t1);}
+.ss-lbl{font-size:10px;font-family:monospace;color:var(--t3);margin-top:2px;}
+.ss-badge{position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:var(--bl);border-radius:50%;font-size:11px;color:#fff;display:none;align-items:center;justify-content:center;font-weight:700;}
+.ss-minus{position:absolute;bottom:-6px;left:-6px;width:20px;height:20px;background:var(--rdim);border:1px solid rgba(226,75,74,.3);border-radius:50%;color:var(--re);font-size:14px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;padding:0;}
+.ssize.sel .ss-badge,.ssize.sel .ss-minus{display:flex;}
+.st-btn{border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;cursor:pointer;}
+.st-btn:disabled{opacity:.4;}
+#stock-add-cart-btn{background:var(--bl);color:#fff;}
+#stock-save-btn{margin-top:12px;background:var(--ac);color:#000;width:100%;}
+#stock-cart-items{display:flex;flex-direction:column;gap:8px;}
+.cart-item{background:rgba(255,255,255,.05);border:1px solid var(--b1);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ci-info{flex:1;min-width:0;}
+.ci-title{font-size:13px;font-weight:700;color:var(--t1);}
+.ci-sizes{font-size:11px;color:var(--t3);margin-top:2px;}
+.ci-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.ci-price{font-size:13px;font-weight:700;color:var(--ac);}
+.cart-del{background:none;border:none;color:var(--re);cursor:pointer;font-size:16px;padding:4px;}
+.cart-tot{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);font-size:13px;font-family:monospace;}
+.cart-tot span{color:var(--t3);}
+#stock-total-pairs{color:var(--t1);}
+#stock-total-price{color:var(--ac);}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:0s!important;}
+}
 </style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="spin" style="width:44px;height:44px;border-width:3.5px;border-top-color:var(--ac);border-color:rgba(9,201,122,.25);"></div>
+  <div class="spin lg"></div>
   <h2>Vinted HQ</h2>
   <p id="load-msg">Conectando con Sheets...</p>
 </div>
 
 <div id="tb">
-  <button class="tb-btn" style="border:none;" id="menu-btn">
+  <button class="tb-btn plain" id="menu-btn" aria-label="Menú">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
   <div id="tb-title">Vinted HQ</div>
   <span id="tb-status">● Sheets</span>
-  <button class="tb-btn" id="btn-stock" title="Añadir stock">
+  <button class="tb-btn" id="btn-stock" title="Añadir stock" aria-label="Añadir stock">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
-  <button class="tb-btn" id="btn-sales">
+  <button class="tb-btn" id="btn-sales" aria-label="Chat de ventas">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
 </div>
@@ -239,14 +334,12 @@ textarea.inp::placeholder{color:var(--t3);}
   <div id="dh"><h2>Vinted HQ</h2><p id="d-count">Sin cuentas</p></div>
   <div id="d-sec">
     <span id="d-sec-lbl">Cuentas</span>
-    <button id="d-new" style="background:var(--adim);border:1px solid rgba(9,201,122,.25);color:var(--ac);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+    <button id="d-new" aria-label="Nueva cuenta">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
   </div>
   <div id="dlist"></div>
-  <button id="d-stock" style="margin:0 8px 6px;background:none;border:1px solid var(--b1);border-radius:var(--r);color:var(--t2);cursor:pointer;padding:11px 14px;display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;width:calc(100% - 16px);">
-    📦 Añadir Stock
-  </button>
+  <button id="d-stock">📦 Añadir Stock</button>
   <button id="d-sales">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     Chat de ventas
@@ -258,7 +351,7 @@ textarea.inp::placeholder{color:var(--t3);}
     <div class="emp">
       <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <p>Bienvenido a Vinted HQ</p>
-      <small>Pulsa <strong style="color:var(--ac)">+</strong> para crear cuentas<br>o abre el chat de ventas</small>
+      <small>Pulsa <strong>+</strong> para crear cuentas<br>o abre el chat de ventas</small>
       <button class="emp-cta" id="emp-btn">Abrir chat de ventas</button>
     </div>
   </div>
@@ -269,20 +362,19 @@ textarea.inp::placeholder{color:var(--t3);}
       <div class="sb-av" id="c-av">-</div>
       <div class="sb-inf"><h3 id="c-title">—</h3><p id="c-sub">cuenta</p></div>
       <div class="sb-r">
-        <button class="sb-btn" id="c-ren">✎</button>
-        <a class="sb-btn" id="c-email-btn" href="#" style="text-decoration:none;font-size:16px;" title="Enviar fotos por email">📧</a>
-        <button class="sb-btn red" id="c-clear-btn">🗑</button>
+        <button class="sb-btn" id="c-ren" aria-label="Renombrar">✎</button>
+        <a class="sb-btn ico" id="c-email-btn" href="#" title="Enviar fotos por email">📧</a>
+        <button class="sb-btn red" id="c-clear-btn" aria-label="Vaciar chat">🗑</button>
         <span class="tag g">Activa</span>
         <span class="tag" id="c-cnt">0</span>
       </div>
     </div>
-    <!-- Upload progress for account chat -->
-    <div id="c-upload-progress" style="display:none;padding:8px 14px;background:var(--amdim);border-bottom:1px solid rgba(239,159,39,.2);flex-shrink:0;align-items:center;gap:10px;">
+    <div class="upbar" id="c-upload-progress">
       <div class="spin-sm"></div>
-      <span id="c-upload-msg" style="font-size:12px;color:var(--am);font-family:'DM Mono',monospace;flex:1;">Subiendo fotos...</span>
+      <span id="c-upload-msg">Subiendo fotos...</span>
     </div>
-    <div id="c-clear-bar" style="display:none;padding:12px 14px;background:var(--rdim);border-bottom:1px solid rgba(226,75,74,.2);flex-shrink:0;flex-direction:column;gap:10px;">
-      <p style="font-size:13px;color:var(--re);font-family:'DM Mono',monospace;line-height:1.5;">⚠ ¿Borrar todos los mensajes de esta cuenta? No se puede deshacer.</p>
+    <div class="cbar" id="c-clear-bar">
+      <p>⚠ ¿Borrar todos los mensajes de esta cuenta? No se puede deshacer.</p>
       <div class="cfm">
         <button class="cfm-btn no" id="c-cfm-no">Cancelar</button>
         <button class="cfm-btn yes" id="c-cfm-yes">Sí, borrar</button>
@@ -292,11 +384,11 @@ textarea.inp::placeholder{color:var(--t3);}
     <div class="inp-wrap">
       <div class="inp-row">
         <input type="file" id="img-in" multiple accept="image/*">
-        <button class="inp-ico" id="c-img-btn">
+        <button class="inp-ico" id="c-img-btn" aria-label="Subir fotos">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
-        <textarea class="inp" id="c-ta" placeholder="Nota para esta cuenta..." rows="1"></textarea>
-        <button class="inp-ico send" id="c-send">
+        <textarea class="inp" id="c-ta" placeholder="Nota para esta cuenta..." rows="1" enterkeyhint="send"></textarea>
+        <button class="inp-ico send" id="c-send" aria-label="Enviar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -309,7 +401,7 @@ textarea.inp::placeholder{color:var(--t3);}
       <div class="sb-av sv">€</div>
       <div class="sb-inf"><h3>Chat de ventas</h3><p>etiquetas · ventas</p></div>
       <div class="sb-r">
-        <button class="sb-btn red" id="s-clear-btn">🗑</button>
+        <button class="sb-btn red" id="s-clear-btn" aria-label="Limpiar chat">🗑</button>
         <button class="sh-btn" id="s-sheets-btn">
           <div class="sdot on" id="sdot"></div>
           <span id="sheets-lbl">Sheets ✓</span>
@@ -319,16 +411,16 @@ textarea.inp::placeholder{color:var(--t3);}
     <div id="hint">
       <span>1º sube etiqueta → 2º escribe: <code>3 Nike Sand 43 40€</code></span>
     </div>
-    <div id="clear-bar">
+    <div class="cbar" id="clear-bar">
       <p>⚠ ¿Borrar todo el historial del chat? No se puede deshacer.</p>
       <div class="cfm">
         <button class="cfm-btn no" id="cfm-no">Cancelar</button>
         <button class="cfm-btn yes" id="cfm-yes">Sí, borrar todo</button>
       </div>
     </div>
-    <div id="del-msg-bar" style="display:none;padding:12px 14px;background:var(--rdim);border-bottom:1px solid rgba(226,75,74,.2);flex-shrink:0;flex-direction:column;gap:10px;">
-      <p style="font-size:13px;color:var(--re);font-family:monospace;line-height:1.5;">¿Borrar este mensaje?</p>
-      <div style="display:flex;gap:8px;">
+    <div class="cbar" id="del-msg-bar">
+      <p>¿Borrar este mensaje?</p>
+      <div class="cfm">
         <button class="cfm-btn no" id="del-msg-no">Cancelar</button>
         <button class="cfm-btn yes" id="del-msg-yes">Borrar</button>
       </div>
@@ -337,11 +429,11 @@ textarea.inp::placeholder{color:var(--t3);}
     <div class="inp-wrap">
       <div class="inp-row">
         <input type="file" id="pdf-in" accept=".pdf,image/*">
-        <button class="inp-ico" id="s-file-btn">
+        <button class="inp-ico" id="s-file-btn" aria-label="Subir etiqueta">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </button>
-        <textarea class="inp" id="s-ta" placeholder="3 Birkenstock Sand 43 40€" rows="1"></textarea>
-        <button class="inp-ico send" id="s-send">
+        <textarea class="inp" id="s-ta" placeholder="3 Birkenstock Sand 43 40€" rows="1" enterkeyhint="send"></textarea>
+        <button class="inp-ico send" id="s-send" aria-label="Enviar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -351,63 +443,55 @@ textarea.inp::placeholder{color:var(--t3);}
   <!-- STOCK PANEL -->
   <div class="panel" id="p-stock">
     <div class="sbar">
-      <div class="sb-av" style="color:var(--am);border-color:rgba(239,159,39,.25);background:var(--amdim);">📦</div>
+      <div class="sb-av st">📦</div>
       <div class="sb-inf"><h3>Añadir Stock</h3><p>añade nuevos zapatos a COMANDES</p></div>
       <div class="sb-r">
         <button class="sb-btn" id="stock-back-btn">← Volver</button>
       </div>
     </div>
-    <div id="stock-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:16px;">
-      <div id="stock-status" style="display:none;padding:10px 14px;border-radius:var(--r);font-size:13px;font-family:monospace;text-align:center;"></div>
+    <div id="stock-body">
+      <div class="st-status" id="stock-status" hidden></div>
 
-      <!-- Products grid -->
       <div>
-        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Modelo</div>
-        <div id="stock-products-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div>
+        <div class="st-lbl">Modelo</div>
+        <div class="st-grid" id="stock-products-grid"></div>
       </div>
 
-      <!-- New product input -->
-      <div id="stock-new-product-wrap" style="display:none;">
-        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Nombre del nuevo modelo</div>
-        <input class="fi" id="stock-new-product" placeholder="Ej: New Balance 574" style="width:100%;">
+      <div id="stock-new-product-wrap" hidden>
+        <div class="st-lbl">Nombre del nuevo modelo</div>
+        <input class="fi" id="stock-new-product" placeholder="Ej: New Balance 574">
       </div>
 
-      <!-- Colors grid -->
-      <div id="stock-colors-wrap" style="display:none;">
-        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Color</div>
-        <div id="stock-colors-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div>
+      <div id="stock-colors-wrap" hidden>
+        <div class="st-lbl">Color</div>
+        <div class="st-grid" id="stock-colors-grid"></div>
       </div>
 
-      <!-- New color input -->
-      <div id="stock-new-color-wrap" style="display:none;">
-        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Nombre del color</div>
-        <input class="fi" id="stock-new-color" placeholder="Ej: DarkGreen" style="width:100%;">
+      <div id="stock-new-color-wrap" hidden>
+        <div class="st-lbl">Nombre del color</div>
+        <input class="fi" id="stock-new-color" placeholder="Ej: DarkGreen">
       </div>
 
-      <!-- Sizes grid -->
-      <div id="stock-sizes-wrap" style="display:none;">
-        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Tallas (toca para seleccionar)</div>
-        <div id="stock-sizes-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+      <div id="stock-sizes-wrap" hidden>
+        <div class="st-lbl">Tallas (toca para seleccionar)</div>
+        <div class="st-grid c3" id="stock-sizes-grid"></div>
       </div>
 
-      <!-- Price -->
-      <div id="stock-price-wrap" style="display:none;">
-        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Precio de Compra (€)</div>
-        <input class="fi" id="stock-price" type="number" step="0.01" placeholder="Ej: 35.00" inputmode="decimal" style="width:100%;">
+      <div id="stock-price-wrap" hidden>
+        <div class="st-lbl">Precio de Compra (€)</div>
+        <input class="fi" id="stock-price" type="number" step="0.01" placeholder="Ej: 35.00" inputmode="decimal">
       </div>
 
-      <!-- Add to cart button -->
-      <button id="stock-add-cart-btn" disabled style="background:var(--bl);border:none;border-radius:var(--r);color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;cursor:pointer;opacity:.4;">🛒 Añadir al carrito</button>
+      <button class="st-btn" id="stock-add-cart-btn" disabled>🛒 Añadir al carrito</button>
 
-      <!-- Cart -->
-      <div id="stock-cart-wrap" style="display:none;">
-        <div style="font-size:11px;color:var(--t3);font-family:monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Carrito</div>
-        <div id="stock-cart-items" style="display:flex;flex-direction:column;gap:8px;"></div>
-        <div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1);font-size:13px;font-family:monospace;">
-          <span style="color:var(--t3);">Total pares: <strong id="stock-total-pairs" style="color:var(--t1);">0</strong></span>
-          <span style="color:var(--t3);">Inversión: <strong id="stock-total-price" style="color:var(--ac);">0.00€</strong></span>
+      <div id="stock-cart-wrap" hidden>
+        <div class="st-lbl">Carrito</div>
+        <div id="stock-cart-items"></div>
+        <div class="cart-tot">
+          <span>Total pares: <strong id="stock-total-pairs">0</strong></span>
+          <span>Inversión: <strong id="stock-total-price">0.00€</strong></span>
         </div>
-        <button id="stock-save-btn" style="margin-top:12px;background:var(--ac);border:none;border-radius:var(--r);color:#000;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;padding:12px;cursor:pointer;width:100%;">🚀 Guardar todo el stock</button>
+        <button class="st-btn" id="stock-save-btn">🚀 Guardar todo el stock</button>
       </div>
     </div>
   </div>
@@ -443,7 +527,7 @@ textarea.inp::placeholder{color:var(--t3);}
   <div class="mo-box">
     <div class="mo-handle"></div>
     <h3>Renombrar cuenta</h3>
-    <div class="fg" style="margin-top:16px">
+    <div class="fg mt">
       <span class="fl">Nombre</span>
       <input class="fi" id="mo-rename-in" placeholder="Ej: 3">
     </div>
@@ -459,7 +543,7 @@ textarea.inp::placeholder{color:var(--t3);}
   <div class="mo-box">
     <div class="mo-handle"></div>
     <h3 id="mo-del-title">¿Eliminar cuenta?</h3>
-    <p id="mo-del-desc" style="font-size:13px;color:var(--t2);margin-top:10px;line-height:1.6;font-family:'DM Mono',monospace;"></p>
+    <p id="mo-del-desc"></p>
     <div class="mo-btns">
       <button class="mo-btn cc" id="mo-del-cancel">Cancelar</button>
       <button class="mo-btn dd" id="mo-del-ok">Eliminar</button>
@@ -468,1184 +552,1387 @@ textarea.inp::placeholder{color:var(--t3);}
 </div>
 
 <div id="lb">
-  <button id="lb-x">✕</button>
+  <button id="lb-x" aria-label="Cerrar">✕</button>
   <img id="lb-img" src="" alt="">
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
 'use strict';
-const SURL = 'https://script.google.com/macros/s/AKfycbyLtSXQ9d9-m6TxeDMJWJ0298dKZCxJi0CnV327E4yD2vGuLKXTIC2YC-ZYu5f8H7m61Q/exec';
-const TTL  = 7*24*60*60*1000;
 
-let accounts=[], curId=null, view='empty';
-let accMsgs={}, saleMsgs=[];
-let nextNum=1, pendingFile=null;
-let accEmails={}; // {accountName: email}
+// ═════════════════════════════════════════════════════════════════════════════
+// CONFIG
+// ═════════════════════════════════════════════════════════════════════════════
+const SURL      = 'https://script.google.com/macros/s/AKfycbyLtSXQ9d9-m6TxeDMJWJ0298dKZCxJi0CnV327E4yD2vGuLKXTIC2YC-ZYu5f8H7m61Q/exec';
+// Despliegue separado que usa el panel "Añadir stock" (getStockData / addStockBulk).
+const STOCK_API = 'https://script.google.com/macros/s/AKfycby4kQlZ_m4t_8bp9NS_7fm5mq7G5_6LzHSy2Y3xpyERI0ysub30GuOH9-YxFWsG-CzlTQ/exec';
 
-// ── API ───────────────────────────────────────────────────────────────────────
-async function POST(body){
-  const r=await Promise.race([
-    fetch(SURL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)}),
-    new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),25000))
-  ]);
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
+const DIAS_ENTREGA   = 15;                   // Igual que en el backend: getFotos solo devuelve stock con >= 15 días
+const TTL            = 7*24*60*60*1000;      // Mensajes más antiguos no se muestran
+const SALES_ID       = '__sales__';
+const ACCOUNTS_ROW   = '__accounts__';
+const DEFAULT_SIZES  = ['36','37','38','39','40','41','42','43','44'];
+
+const GET_TIMEOUT     = 20000;
+const POST_TIMEOUT    = 25000;
+const VENTA_TIMEOUT   = 40000;               // Margen extra: un timeout + reintento mientras el primero sigue en curso es lo que puede duplicar
+const UPLOAD_TIMEOUT  = 60000;               // Las fotos en base64 desde móvil pueden tardar
+const GET_RETRY_DELAYS   = [1500];           // Lecturas: 1 reintento silencioso
+const VENTA_RETRY_DELAYS = [2000, 4000];     // 3 intentos en total (idempotente gracias a ventaId)
+const SAVE_RETRY_DELAYS  = [2000, 2000];     // Guardado del mensaje de confirmación de venta
+const UPLOAD_CONCURRENCY = 3;
+const ACC_FOTOS_MAX      = 3;                // Resultados mostrados/marcados en el chat de cuenta
+const LONG_PRESS_MS      = 600;
+const SOV_AUTOCLOSE_MS   = 4000;
+const TOAST_MS           = 2500;
+const STICK_THRESHOLD    = 80;               // px desde el fondo para considerar que el usuario "está abajo"
+
+// ═════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═════════════════════════════════════════════════════════════════════════════
+let accounts = [], curId = null, view = 'empty';
+let accMsgs = {}, saleMsgs = [];
+let nextNum = 1, pendingFile = null;
+let accEmails = {};              // {nombreCuenta: email}
+const lastAutoMarked = {};       // {accountId: {product,color,size}} último marcado automáticamente
+const labelWait = new Map();     // ventaMsgId → Promise de la etiqueta que aún se está subiendo
+
+// ═════════════════════════════════════════════════════════════════════════════
+// API — transporte, timeouts, reintentos y clasificación de errores
+// ═════════════════════════════════════════════════════════════════════════════
+// kind: 'network' → sin conexión / timeout / 5xx (reintentable)
+//       'logic'   → el backend respondió pero con error (ok:false, respuesta inválida...)
+class ApiError extends Error {
+  constructor(kind, message){ super(message); this.kind = kind; }
 }
-async function GET(params){
-  const qs=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-  const r=await Promise.race([
-    fetch(SURL+'?'+qs),
-    new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),20000))
-  ]);
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
+const isNetErr = e => !!e && e.kind === 'network';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function request(url, init, {timeout, raw=false}){
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, {...init, signal: ctrl.signal});
+    if (!r.ok) throw new ApiError(r.status >= 500 || r.status === 429 ? 'network' : 'logic', 'HTTP ' + r.status);
+    const text = await r.text();
+    if (raw) return text;
+    try { return JSON.parse(text); }
+    catch { throw new ApiError('logic', 'Respuesta inválida del servidor'); }
+  } catch (e) {
+    if (e instanceof ApiError) throw e;
+    throw new ApiError('network', e.name === 'AbortError' ? 'timeout' : 'sin conexión');
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
-// ── FILE TO B64 ───────────────────────────────────────────────────────────────
+async function withRetry(fn, delays = []){
+  for (let i = 0; ; i++){
+    try { return await fn(); }
+    catch (e) {
+      if (!isNetErr(e) || i >= delays.length) throw e;
+      await sleep(delays[i]);   // silencioso: la UI solo ve el resultado final
+    }
+  }
+}
+
+function trackNet(p){
+  return p.then(
+    r => { setSyncBadge('ok'); return r; },
+    e => { if (isNetErr(e)) setSyncBadge('err'); throw e; }
+  );
+}
+
+function apiGet(params, {retries = GET_RETRY_DELAYS} = {}){
+  const qs = Object.entries(params).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&');
+  return trackNet(withRetry(() => request(SURL + '?' + qs, {}, {timeout: GET_TIMEOUT}), retries));
+}
+function apiPost(body, {timeout = POST_TIMEOUT, retries = []} = {}){
+  const init = {method: 'POST', headers: {'Content-Type': 'text/plain'}, body: JSON.stringify(body)};
+  return trackNet(withRetry(() => request(SURL, init, {timeout}), retries));
+}
+
 function fileToB64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=e=>res(e.target.result.split(',')[1]);
-    r.onerror=rej;
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result.split(',')[1]);
+    r.onerror = rej;
     r.readAsDataURL(file);
   });
 }
 
-// ── UPLOAD FILE TO DRIVE ──────────────────────────────────────────────────────
-async function uploadToDrive(file){
-  const b64=await fileToB64(file);
-  const res=await POST({action:'uploadFile',fileData:b64,fileName:file.name,mimeType:file.type});
-  if(!res.ok) throw new Error(res.error||'Upload failed');
-  return res; // {ok,fileId,viewUrl,fileName}
-}
+const Api = {
+  getAccounts: () => apiGet({action: 'getAccounts'}),
+  getEmails:   () => apiGet({action: 'getEmails'}),
+  getMessages: () => apiGet({action: 'getMessages'}),
+  getFotos:    query => apiGet({action: 'getFotos', query}),
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-async function init(){
-  setLoadMsg('Cargando cuentas...');
-  try{
-    const ar=await GET({action:'getAccounts'});
-    if(ar.ok&&ar.accounts&&ar.accounts.length){
-      accounts=ar.accounts;
-      nextNum=Math.max(...accounts.map(a=>parseInt(a.name)||0),accounts.length)+1;
-    }
-    // Load emails from Cuentas sheet
-    try{
-      const er=await GET({action:'getEmails'});
-      if(er.ok&&er.emails) accEmails=er.emails;
-    }catch(e){}
-    setLoadMsg('Cargando mensajes...');
-    const mr=await GET({action:'getMessages'});
-    if(mr.ok){
-      const now=Date.now();
-      accounts.forEach(a=>{accMsgs[a.id]=[];});
-      saleMsgs=[];
-      mr.msgs.forEach(m=>{
-        if(m.ts&&(now-m.ts)>=TTL) return;
-        if(m.accountId==='__sales__'){
-          try{ saleMsgs.push(JSON.parse(m.text)); }
-          catch(e){ saleMsgs.push({type:'text',text:m.text,time:m.time,ts:m.ts}); }
-        } else {
-          if(!accMsgs[m.accountId]) accMsgs[m.accountId]=[];
-          try{
-            const parsed=JSON.parse(m.text);
-            // Restore fotos/system messages properly
-            accMsgs[m.accountId].push(parsed);
-          }catch(e){
-            accMsgs[m.accountId].push({type:m.type||'text',text:m.text,time:m.time,ts:m.ts});
-          }
-        }
-      });
-    }
-    setSyncBadge('ok');
-  }catch(e){
-    setSyncBadge('err');
-    toast('Sin conexión — modo offline','err');
+  saveMessage: (accountId, accountName, msg, opts) => apiPost({
+    action: 'saveMessage', accountId, accountName,
+    type: msg.type, text: JSON.stringify(msg), time: msg.time, ts: msg.ts
+  }, opts),
+  saveAccounts:  list => apiPost({action: 'saveAccount', accounts: list}),
+  deleteAccount: accountId => apiPost({action: 'deleteAccount', accountId}),
+  deleteSaleMsg: ts => apiPost({action: 'deleteSaleMsg', ts}),
+
+  marcarPublicado:    p => apiPost({action: 'marcarPublicado',    product: p.product, color: p.color, size: p.size}),
+  desmarcarPublicado: p => apiPost({action: 'desmarcarPublicado', product: p.product, color: p.color, size: p.size}),
+  undoVenta:          v => apiPost({action: 'undoVenta', product: v.product, color: v.color, size: v.size, price: v.price}),
+
+  async uploadFile(file){
+    const fileData = await fileToB64(file);
+    const res = await apiPost({action: 'uploadFile', fileData, fileName: file.name, mimeType: file.type}, {timeout: UPLOAD_TIMEOUT});
+    if (!res.ok) throw new ApiError('logic', res.error || 'Upload failed');
+    return res; // {ok, fileId, viewUrl, fileName}
+  },
+
+  // Reintentos automáticos seguros: el backend deduplica por ventaId (responde ok:true, duplicate:true)
+  async registerVenta(m){
+    const res = await apiPost({
+      numCuenta: m.numCuenta, product: m.product, color: m.color,
+      size: m.size, price: m.price, ventaId: m.ventaId || m.id
+    }, {timeout: VENTA_TIMEOUT, retries: VENTA_RETRY_DELAYS});
+    if (!res.ok) throw new ApiError('logic', res.error || 'error');
+    return res; // {ok, email, price, duplicate?}
+  },
+
+  // Panel de stock (despliegue STOCK_API)
+  async getStock(){
+    const data = await request(STOCK_API, {}, {timeout: GET_TIMEOUT});
+    if (data && data.error) throw new ApiError('logic', data.error);
+    return data;
+  },
+  async addStockBulk(cart){
+    const text = await request(STOCK_API, {
+      method: 'POST', headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({action: 'addStockBulk', cart})
+    }, {timeout: POST_TIMEOUT, raw: true});
+    let res = null;
+    try { res = JSON.parse(text); } catch {}
+    if (res && res.ok === false) throw new ApiError('logic', res.error || 'error');
+    return res;
   }
-  hideLoading(); buildDrawer(); showSales();
+};
+
+// Guardado "fire & forget" de mensajes (nunca muestra error al usuario)
+function persistAcc(accId, msg){
+  const a = accounts.find(x => x.id === accId);
+  return Api.saveMessage(accId, a ? a.name : '', msg).catch(() => {});
 }
-function setLoadMsg(t){document.getElementById('load-msg').textContent=t;}
-function hideLoading(){document.getElementById('loading').classList.add('off');}
-function setSyncBadge(s){
-  const b=document.getElementById('tb-status');
-  if(s==='ok'){b.textContent='● Sheets ✓';b.className='ok';}
-  else if(s==='err'){b.textContent='● Sin conexión';b.className='err';}
-  else b.textContent='● Sheets';
+function persistSale(msg, retries){
+  return Api.saveMessage(SALES_ID, 'sales', msg, {retries}).catch(() => {});
 }
+function pushAccounts(){ return Api.saveAccounts(accounts).catch(() => {}); }
 
-// ── DRAWER ────────────────────────────────────────────────────────────────────
-function openDrawer(){document.getElementById('drawer').classList.add('on');document.getElementById('dov').classList.add('on');}
-function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('dov').classList.remove('on');}
-let dragFrom=null;
-function buildDrawer(){
-  const list=document.getElementById('dlist'); list.innerHTML='';
-  const n=accounts.length;
-  document.getElementById('d-count').textContent=n?n+' cuenta'+(n===1?'':'s'):'Sin cuentas';
-  document.getElementById('d-sales').classList.toggle('on',view==='sales');
-  accounts.forEach((a,i)=>{
-    const row=document.createElement('div');
-    row.className='drow'+(a.id===curId&&view==='chat'?' on':'')+((accMsgs[a.id]||[]).length?' hm':'');
-    row.dataset.i=i;
-    const grip=document.createElement('div'); grip.className='d-grip';
-    grip.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>';
-    const btn=document.createElement('button'); btn.className='d-acc-btn';
-    btn.innerHTML=`<div class="d-av">${esc(a.name)}</div><span class="d-name">${esc(a.name)}</span><div class="d-dot"></div>`;
-    btn.addEventListener('click',()=>{showChat(a.id);closeDrawer();});
-    const del=document.createElement('button'); del.className='d-del';
-    del.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>';
-    del.addEventListener('click',()=>askDel(a.id));
-    grip.addEventListener('touchstart',()=>{dragFrom=i;},{passive:true});
-    grip.addEventListener('touchmove',e=>{
-      e.preventDefault();
-      const y=e.touches[0].clientY;
-      document.querySelectorAll('.drow').forEach(r=>r.classList.remove('dov2'));
-      const rows=Array.from(document.querySelectorAll('.drow'));
-      const over=rows.find(r=>{const rc=r.getBoundingClientRect();return y>=rc.top&&y<=rc.bottom;});
-      if(over&&over!==row) over.classList.add('dov2');
-    },{passive:false});
-    grip.addEventListener('touchend',()=>{
-      const rows=Array.from(document.querySelectorAll('.drow'));
-      const over=rows.find(r=>r.classList.contains('dov2'));
-      if(over&&dragFrom!==null){
-        const to=parseInt(over.dataset.i);
-        if(dragFrom!==to){const m=accounts.splice(dragFrom,1)[0];accounts.splice(to,0,m);pushAccounts();}
-      }
-      rows.forEach(r=>r.classList.remove('dov2'));dragFrom=null;buildDrawer();
-    },{passive:true});
-    row.append(grip,btn,del); list.appendChild(row);
-  });
-}
-
-// ── PANELS ────────────────────────────────────────────────────────────────────
-function hideAll(){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));}
-function showEmpty(){view='empty';curId=null;hideAll();document.getElementById('p-empty').classList.add('on');document.getElementById('btn-sales').classList.remove('on');buildDrawer();}
-function showChat(id){
-  view='chat';curId=id;hideAll();document.getElementById('p-chat').classList.add('on');
-  closeAccClearBar();
-  document.getElementById('btn-sales').classList.remove('on');
-  buildDrawer();renderChatHeader();renderAccMsgs();
-}
-function showSales(){
-  view='sales';hideAll();document.getElementById('p-sales').classList.add('on');
-  document.getElementById('btn-sales').classList.add('on');
-  closeClearBar();buildDrawer();renderSaleMsgs();
-}
-
-// ── RENDER HELPERS ────────────────────────────────────────────────────────────
-function makeFileBubble(m){
-  const isPdf=(m.mimeType||'').includes('pdf');
-  const w=document.createElement('div'); w.className='msg out';
-  let bub;
-  if(m.uploading){
-    bub=document.createElement('div'); bub.className='fbub uploading';
-    bub.innerHTML=`<div class="ficon loading"><div class="spin-sm"></div></div>
-      <div><div class="fname">${esc(m.name)}</div><div class="fsub">Subiendo a Drive...</div></div>`;
-  } else if(m.viewUrl){
-    bub=document.createElement('a'); bub.className='fbub clickable';
-    bub.href=m.viewUrl; bub.target='_blank'; bub.rel='noopener';
-    bub.innerHTML=`<div class="ficon ${isPdf?'pdf':'img'}">${isPdf?'PDF':'IMG'}</div>
-      <div><div class="fname">${esc(m.name)}</div><div class="fsub ok">✓ Abrir en Drive</div></div>`;
-  } else {
-    bub=document.createElement('div'); bub.className='fbub';
-    bub.innerHTML=`<div class="ficon ${isPdf?'pdf':'img'}">${isPdf?'PDF':'IMG'}</div>
-      <div><div class="fname">${esc(m.name)}</div><div class="fsub err">✗ Error al subir</div></div>`;
-  }
-  const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
-  w.append(bub,t); return w;
-}
-
-function makeImgGrid(urls, time){
-  const w=document.createElement('div'); w.className='msg out';
-  const grid=document.createElement('div');
-  grid.className='img-grid'+(urls.length===1?' single':'');
-  urls.forEach(url=>{
-    const img=document.createElement('img'); img.src=url;
-    img.addEventListener('click',()=>openLB(url));
-    grid.appendChild(img);
-  });
-  const t=document.createElement('div'); t.className='mtime'; t.textContent=time;
-  w.append(grid,t); return w;
-}
-
-// ── ACCOUNT CHAT ──────────────────────────────────────────────────────────────
-function renderChatHeader(){
-  const a=accounts.find(x=>x.id===curId); if(!a)return;
-  document.getElementById('c-av').textContent=a.name;
-  document.getElementById('c-title').textContent='Cuenta '+a.name;
-  document.getElementById('c-sub').textContent='cuenta '+a.name+' · activa';
-  const n=(accMsgs[a.id]||[]).length;
-  document.getElementById('c-cnt').textContent=n+(n===1?' msg':' msgs');
-  // Set email button
-  const email=accEmails[a.name]||'';
-  const emailBtn=document.getElementById('c-email-btn');
-  if(email){
-    emailBtn.href='mailto:'+email+'?subject=Fotos+cuenta+'+encodeURIComponent(a.name);
-    emailBtn.style.opacity='1';
-    emailBtn.title='Enviar fotos a '+email;
-  } else {
-    emailBtn.href='#';
-    emailBtn.style.opacity='0.3';
-    emailBtn.title='Email no encontrado';
-  }
-}
-function renderAccMsgs(){
-  const c=document.getElementById('c-msgs');
-  const msgs=accMsgs[curId]||[]; c.innerHTML='';
-  if(!msgs.length){c.innerHTML='<div class="mnote">Sin mensajes · sube fotos o escribe una nota</div>';return;}
-  msgs.forEach(m=>{
-    if(m.type==='images'){
-      c.appendChild(makeImgGrid(m.urls||[],m.time));
-    } else if(m.type==='file'){
-      c.appendChild(makeFileBubble(m));
-    } else if(m.type==='system'||m.type==='searching'){
-      const w=document.createElement('div'); w.className='msg in';
-      const b=document.createElement('div'); b.className='bub';
-      b.style.cssText='background:var(--bg3);color:var(--t2);border:1px solid var(--b1);border-bottom-left-radius:4px;font-family:monospace;font-size:13px;';
-      b.textContent=m.text||'';
-      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
-      w.append(b,t); c.appendChild(w);
-    } else if(m.type==='fotos'){
-      const w=document.createElement('div'); w.className='msg in';
-      const card=document.createElement('div');
-      card.style.cssText='background:var(--bg3);border:1px solid var(--b1);border-radius:16px;border-bottom-left-radius:4px;overflow:hidden;max-width:300px;';
-      const hdr=document.createElement('div');
-      hdr.style.cssText='padding:10px 14px 6px;font-size:12px;color:var(--t3);font-family:monospace;border-bottom:1px solid var(--b1);';
-      hdr.textContent='Stock disponible ('+m.results.length+')';
-      card.appendChild(hdr);
-      m.results.forEach(function(r){
-        const row=document.createElement('div');
-        row.style.cssText='padding:8px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;';
-        const info=document.createElement('div'); info.style.cssText='flex:1;min-width:0;';
-        const name=document.createElement('div');
-        name.style.cssText='font-size:13px;font-weight:700;color:var(--t1);';
-        name.textContent=r.product;
-        const sub=document.createElement('div');
-        sub.style.cssText='font-size:11px;color:var(--t3);font-family:monospace;margin-top:2px;';
-        sub.textContent=r.color+' - T.'+r.size;
-        info.append(name,sub);
-        row.appendChild(info);
-        if(r.url){
-          const a=document.createElement('a');
-          a.href=r.url; a.target='_blank'; a.rel='noopener';
-          a.style.cssText='background:var(--bdim);color:var(--bl);border:1px solid rgba(55,138,221,.2);border-radius:8px;font-size:10px;font-family:monospace;padding:4px 8px;text-decoration:none;white-space:nowrap;flex-shrink:0;';
-          a.textContent='Ver fotos';
-          row.appendChild(a);
-        }
-        card.appendChild(row);
-      });
-      const hint=document.createElement('div');
-      hint.style.cssText='padding:8px 14px;font-size:10px;color:var(--t3);font-family:monospace;';
-      const first=m.results[0]||{};
-      hint.textContent='publicado '+(first.product||'')+' '+(first.color||'')+' '+(first.size||'');
-      card.appendChild(hint);
-      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
-      w.append(card,t); c.appendChild(w);
-    } else {
-      const w=document.createElement('div'); w.className='msg out';
-      const b=document.createElement('div'); b.className='bub'; b.textContent=m.text||'';
-      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
-      w.append(b,t); c.appendChild(w);
-    }
-  });
-  c.scrollTop=c.scrollHeight;
-}
-
-// Upload multiple images to account chat
-document.getElementById('img-in').addEventListener('change', async function(){
-  const files=Array.from(this.files); if(!files.length||!curId) return;
-  const now=new Date(); const ts=Date.now();
-  const time=pad(now.getHours())+':'+pad(now.getMinutes());
-  const a=accounts.find(x=>x.id===curId);
-  const msgId='imgs'+ts;
-
-  // Show progress
-  const prog=document.getElementById('c-upload-progress');
-  const progMsg=document.getElementById('c-upload-msg');
-  prog.style.display='flex';
-
-  const urls=[];
-  for(let i=0;i<files.length;i++){
-    progMsg.textContent=`Subiendo foto ${i+1}/${files.length}...`;
-    try{
-      const res=await uploadToDrive(files[i]);
-      urls.push(res.viewUrl);
-    }catch(e){
-      toast('Error subiendo foto '+(i+1),'err');
-    }
-  }
-  prog.style.display='none';
-
-  if(urls.length){
-    const msg={id:msgId,type:'images',urls,time,ts};
-    if(!accMsgs[curId]) accMsgs[curId]=[];
-    accMsgs[curId].push(msg);
-    // Save to sheets
-    POST({action:'saveMessage',accountId:curId,accountName:a?a.name:'',
-      type:'images',text:JSON.stringify(msg),time,ts}).catch(()=>{});
-    buildDrawer(); renderChatHeader(); renderAccMsgs();
-    toast(urls.length+' foto'+(urls.length>1?'s':'')+' subida'+(urls.length>1?'s':'')+' ✓','ok');
-  }
-  this.value='';
-});
-
-async function sendAccMsg(){
-  const ta=document.getElementById('c-ta'); const txt=ta.value.trim();
-  if(!txt||!curId) return;
-  const now=new Date(); const ts=Date.now();
-  const time=pad(now.getHours())+':'+pad(now.getMinutes());
-  if(!accMsgs[curId]) accMsgs[curId]=[];
-  const ae=accounts.find(x=>x.id===curId);
-
-  // Error Adidas Spezial Brown 40 40€ → undo venta
-  const errorVenta=parseErrorVenta(txt);
-  if(errorVenta){
-    accMsgs[curId].push({type:'text',text:txt,time,ts});
-    POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
-    ta.value=''; ta.style.height='auto'; renderAccMsgs();
-    try{
-      const res=await POST({action:'undoVenta',product:errorVenta.product,color:errorVenta.color,size:errorVenta.size,price:errorVenta.price});
-      const msg=res.ok?'Venta deshecha: '+errorVenta.product+' '+errorVenta.color+' T.'+errorVenta.size+' vuelve a Available':'Error: '+(res.error||'no encontrado');
-      accMsgs[curId].push({type:'system',text:msg,time,ts:ts+1});
-      POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'system',text:JSON.stringify({type:'system',text:msg,time,ts:ts+1}),time,ts:ts+1}).catch(()=>{});
-    }catch(e){ accMsgs[curId].push({type:'system',text:'Error: '+e.message,time,ts:ts+1}); }
-    renderAccMsgs(); buildDrawer(); renderChatHeader(); return;
-  }
-
-  // error → desmarcar último publicado
-  if(isErrorCmd(txt)){
-    const last=lastAutoMarked[curId];
-    accMsgs[curId].push({type:'text',text:txt,time,ts});
-    POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'text',text:JSON.stringify({type:'text',text:txt,time,ts}),time,ts}).catch(()=>{});
-    ta.value=''; ta.style.height='auto';
-    if(last){
-      try{
-        await POST({action:'desmarcarPublicado',product:last.product,color:last.color,size:last.size});
-        const dm={type:'system',text:'Desmarcado: '+last.product+' '+last.color+' T.'+last.size+' — vuelve a stock',time,ts:ts+1};
-        accMsgs[curId].push(dm);
-        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'system',text:JSON.stringify(dm),time,ts:ts+1}).catch(()=>{});
-        delete lastAutoMarked[curId];
-      }catch(e){ accMsgs[curId].push({type:'system',text:'Error al desmarcar',time,ts:ts+1}); }
-    } else {
-      accMsgs[curId].push({type:'system',text:'No hay ninguno marcado recientemente',time,ts:ts+1});
-    }
-    renderAccMsgs(); buildDrawer(); renderChatHeader(); return;
-  }
-
-  // publicado X Y Z → marcar manualmente
-  if(isPublicadoCmd(txt)){
-    const p=parsePublicado(txt);
-    if(p){
-      accMsgs[curId].push({type:'text',text:txt,time,ts});
-      ta.value=''; ta.style.height='auto'; renderAccMsgs();
-      try{
-        const res=await POST({action:'marcarPublicado',product:p.product,color:p.color,size:p.size});
-        accMsgs[curId].push({type:'system',text:res.ok?'Marcado: '+p.product+' '+p.color+' T.'+p.size:'Error: '+res.error,time,ts:ts+1});
-      }catch(e){ accMsgs[curId].push({type:'system',text:'Sin conexion',time,ts:ts+1}); }
-      renderAccMsgs(); buildDrawer(); renderChatHeader();
-    }
-    return;
-  }
-
-  // adidas / birkenstock / shoes → buscar stock
-  if(isFotoQuery(txt)){
-    accMsgs[curId].push({type:'text',text:txt,time,ts});
-    const searchId='s'+ts;
-    accMsgs[curId].push({type:'searching',id:searchId,text:'Buscando stock...',time,ts:ts+1});
-    ta.value=''; ta.style.height='auto'; renderAccMsgs();
-    try{
-      const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
-      const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
-      if(res.ok&&res.results&&res.results.length>0){
-        const shown=res.results.slice(0,3);
-        const fotosMsg={type:'fotos',results:shown,query:txt,time,ts:ts+1,autoMarked:shown[0]};
-        accMsgs[curId][idx]=fotosMsg;
-        lastAutoMarked[curId]=shown[0];
-        renderAccMsgs();
-        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'fotos',text:JSON.stringify(fotosMsg),time,ts:ts+1}).catch(()=>{});
-        for(const r of shown){
-          await POST({action:'marcarPublicado',product:r.product,color:r.color,size:r.size}).catch(()=>{});
-        }
-      } else {
-        const sysMsg={type:'system',text:res.msg||res.error||'No hay stock disponible',time,ts:ts+1};
-        accMsgs[curId][idx]=sysMsg;
-        renderAccMsgs();
-        POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'system',text:JSON.stringify(sysMsg),time,ts:ts+1}).catch(()=>{});
-      }
-    }catch(e){
-      const idx=accMsgs[curId].findIndex(m=>m.id===searchId);
-      accMsgs[curId][idx]={type:'system',text:'Error: '+e.message,time,ts:ts+1};
-      renderAccMsgs();
-    }
-    buildDrawer(); renderChatHeader(); return;
-  }
-
-  // Mensaje de texto normal
-  const msg={type:'text',text:txt,time,ts};
-  accMsgs[curId].push(msg);
-  POST({action:'saveMessage',accountId:curId,accountName:ae?ae.name:'',type:'text',text:JSON.stringify(msg),time,ts}).catch(()=>{});
-  ta.value=''; ta.style.height='auto';
-  buildDrawer(); renderChatHeader(); renderAccMsgs();
-}
-
-// ── SALES CHAT ────────────────────────────────────────────────────────────────
-let _delMsgTs = null;
-function askDelMsg(ts){ _delMsgTs=ts; document.getElementById('del-msg-bar').style.display='flex'; }
-function cancelDelMsg(){ _delMsgTs=null; document.getElementById('del-msg-bar').style.display='none'; }
-function confirmDelMsg(){
-  if(_delMsgTs===null) return;
-  saleMsgs=saleMsgs.filter(m=>m.ts!==_delMsgTs);
-  POST({action:'deleteSaleMsg',ts:_delMsgTs}).catch(()=>{});
-  cancelDelMsg(); renderSaleMsgs();
-}
-
-function addLongPress(el, ts){
-  let timer = null;
-  el.addEventListener('touchstart', ()=>{ timer=setTimeout(()=>askDelMsg(ts), 600); }, {passive:true});
-  el.addEventListener('touchend', ()=>{ clearTimeout(timer); }, {passive:true});
-  el.addEventListener('touchmove', ()=>{ clearTimeout(timer); }, {passive:true});
-  // Desktop: right click
-  el.addEventListener('contextmenu', e=>{ e.preventDefault(); askDelMsg(ts); });
-}
-
-function renderSaleMsgs(){
-  const c=document.getElementById('s-msgs'); c.innerHTML='';
-  if(!saleMsgs.length){c.innerHTML='<div class="mnote">1º sube etiqueta · 2º escribe la venta</div>';return;}
-  // Long press state
-  let _lpTimer = null;
-  saleMsgs.forEach(m=>{
-    if(m.type==='text'){
-      const w=document.createElement('div'); w.className='msg out';
-      const b=document.createElement('div'); b.className='bub'; b.textContent=m.text||'';
-      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
-      addLongPress(w, m.ts);
-      w.append(b,t); c.appendChild(w);
-    } else if(m.type==='file'){
-      c.appendChild(makeFileBubble(m));
-    } else if(m.type==='system'||m.type==='searching'){
-      const w=document.createElement('div'); w.className='msg in';
-      const b=document.createElement('div');
-      b.className='bub';
-      b.style.cssText='background:var(--bg3);color:var(--t2);border:1px solid var(--b1);border-bottom-left-radius:4px;font-family:monospace;font-size:13px;';
-      b.textContent=m.text||'';
-      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
-      w.append(b,t); c.appendChild(w);
-    } else if(m.type==='fotos'){
-      const w=document.createElement('div'); w.className='msg in';
-      const card=document.createElement('div');
-      card.style.cssText='background:var(--bg3);border:1px solid var(--b1);border-radius:16px;border-bottom-left-radius:4px;overflow:hidden;max-width:300px;';
-      const hdr=document.createElement('div');
-      hdr.style.cssText='padding:10px 14px 6px;font-size:12px;color:var(--t3);font-family:monospace;border-bottom:1px solid var(--b1);';
-      hdr.textContent='Stock disponible ('+m.results.length+')';
-      card.appendChild(hdr);
-      m.results.forEach(function(r){
-        const row=document.createElement('div');
-        row.style.cssText='padding:8px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;';
-        const info=document.createElement('div');
-        info.style.cssText='flex:1;min-width:0;';
-        const name=document.createElement('div');
-        name.style.cssText='font-size:13px;font-weight:700;color:var(--t1);';
-        name.textContent=r.product;
-        const sub=document.createElement('div');
-        sub.style.cssText='font-size:11px;color:var(--t3);font-family:monospace;margin-top:2px;';
-        sub.textContent=r.color+' - T.'+r.size;
-        info.append(name,sub);
-        row.appendChild(info);
-        if(r.url){
-          const a=document.createElement('a');
-          a.href=r.url; a.target='_blank'; a.rel='noopener';
-          a.style.cssText='background:var(--bdim);color:var(--bl);border:1px solid rgba(55,138,221,.2);border-radius:8px;font-size:10px;font-family:monospace;padding:4px 8px;text-decoration:none;white-space:nowrap;flex-shrink:0;';
-          a.textContent='Ver fotos';
-          row.appendChild(a);
-        }
-        card.appendChild(row);
-      });
-      const hint=document.createElement('div');
-      hint.style.cssText='padding:8px 14px;font-size:10px;color:var(--t3);font-family:monospace;';
-      const first=m.results[0]||{};
-      hint.textContent='publicado '+( first.product||'')+' '+(first.color||'')+' '+(first.size||'');
-      card.appendChild(hint);
-      const t=document.createElement('div'); t.className='mtime'; t.textContent=m.time;
-      w.append(card,t); c.appendChild(w);
-    } else if(m.type==='venta'){
-
-      // User bubble
-      const wu=document.createElement('div'); wu.className='msg out';
-      const bu=document.createElement('div'); bu.className='bub'; bu.textContent=m.raw||'';
-      const tu=document.createElement('div'); tu.className='mtime'; tu.textContent=m.time;
-      addLongPress(wu, m.ts);
-      wu.append(bu,tu); c.appendChild(wu);
-      // Response card
-      const wr=document.createElement('div'); wr.className='msg in';
-      const card=document.createElement('div'); card.className='vcard';
-      const sc=m.syncStatus==='ok'?'ok':m.syncStatus==='error'?'err':'ing';
-      const st=m.syncStatus==='ok'?'✓ Guardado en Sheets':m.syncStatus==='error'?'✗ '+(m.syncError||'error'):'Guardando...';
-      const body=document.createElement('div'); body.className='vc-b';
-      body.innerHTML=`<div class="vc-title">${esc(m.product||'')}</div>
-        <div class="vc-pills">
-          <span class="vc-pill">${esc(m.color||'')}</span>
-          <span class="vc-pill">T.${esc(String(m.size||''))}</span>
-          <span class="vc-pill">Cta.${esc(String(m.numCuenta||''))}</span>
-        </div>
-        <div class="vc-price">${esc(String(m.price||''))}€</div>
-        ${m.labelUrl?`<div class="vc-label">📎 <a href="${esc(m.labelUrl)}" target="_blank" rel="noopener">Ver etiqueta en Drive</a></div>`:''}`;
-      const foot=document.createElement('div'); foot.className='vc-foot';
-      const badge=document.createElement('span'); badge.className='vc-st '+sc; badge.textContent=st;
-      foot.appendChild(badge);
-      if(m.syncStatus!=='ok'){
-        const retry=document.createElement('button'); retry.className='vc-retry'; retry.textContent='reintentar';
-        const mid=m.id; retry.addEventListener('click',()=>retrySale(mid));
-        foot.appendChild(retry);
-      }
-      card.append(body,foot);
-      const tr=document.createElement('div'); tr.className='mtime'; tr.textContent=m.time;
-      wr.append(card,tr); c.appendChild(wr);
-    }
-  });
-  c.scrollTop=c.scrollHeight;
-}
-
-// Upload etiqueta (PDF or image) in sales chat
-document.getElementById('pdf-in').addEventListener('change', async function(){
-  const file=this.files[0]; if(!file) return;
-  const now=new Date(); const ts=Date.now();
-  const time=pad(now.getHours())+':'+pad(now.getMinutes());
-  const msgId='f'+ts;
-
-  // Add uploading bubble immediately
-  const fileMsg={id:msgId,type:'file',name:file.name,mimeType:file.type,uploading:true,viewUrl:'',time,ts};
-  saleMsgs.push(fileMsg);
-  pendingFile={id:msgId,name:file.name,mimeType:file.type,viewUrl:'',time,ts};
-  renderSaleMsgs();
-
-  try{
-    const res=await uploadToDrive(file);
-    fileMsg.uploading=false; fileMsg.viewUrl=res.viewUrl;
-    pendingFile.viewUrl=res.viewUrl;
-    // Save to sheets
-    POST({action:'saveMessage',accountId:'__sales__',accountName:'sales',
-      type:'file',text:JSON.stringify({...fileMsg,uploading:false}),time,ts}).catch(()=>{});
-    renderSaleMsgs();
-    toast('Etiqueta subida ✓','ok');
-  }catch(e){
-    fileMsg.uploading=false;
-    toast('Error al subir etiqueta','err');
-    renderSaleMsgs();
-  }
-  this.value='';
-});
-
-// Keywords que disparan búsqueda de fotos
-const FOTO_KEYWORDS = ['adidas','birkenstock','nike','on cloud','shoes'];
+// ═════════════════════════════════════════════════════════════════════════════
+// PARSERS (lógica pura, sin DOM)
+// ═════════════════════════════════════════════════════════════════════════════
+const FOTO_KEYWORDS = ['adidas', 'birkenstock', 'nike', 'on cloud', 'shoes'];
 const PUBLICADO_KEYWORD = 'publicado ';
 
 function isFotoQuery(txt){
   const t = txt.toLowerCase().trim();
-  // Must be EXACTLY a keyword — never if starts with a number (that's a venta)
-  if(/^\d/.test(t)) return false;
-  return FOTO_KEYWORDS.some(k => t === k);
+  if (/^\d/.test(t)) return false;              // si empieza por número es una venta
+  return FOTO_KEYWORDS.includes(t);
 }
-function isPublicadoCmd(txt){
-  return txt.toLowerCase().trim().startsWith(PUBLICADO_KEYWORD);
+const isPublicadoCmd = txt => txt.toLowerCase().trim().startsWith(PUBLICADO_KEYWORD);
+const isErrorCmd     = txt => txt.toLowerCase().trim() === 'error';
+
+// "... 40€" → {price, rest}
+function splitPrice(t){
+  const pm = t.match(/(\d+(?:[.,]\d+)?)\s*€?\s*$/);
+  if (!pm) return null;
+  return {price: parseFloat(pm[1].replace(',', '.')), rest: t.slice(0, t.lastIndexOf(pm[0])).trim()};
 }
-function isErrorCmd(txt){
-  return txt.toLowerCase().trim() === 'error';
-}
-function parseErrorVenta(txt){
-  // "Error Adidas Spezial Brown 40 40€"
-  const t = txt.trim();
-  if(!t.toLowerCase().startsWith('error ')) return null;
-  const rest = t.slice(6).trim();
-  const pm = rest.match(/(\d+(?:[.,]\d+)?)\s*€?\s*$/);
-  if(!pm) return null;
-  const price = parseFloat(pm[1].replace(',','.'));
-  const wp = rest.slice(0, rest.lastIndexOf(pm[0])).trim();
-  const parts = wp.split(/\s+/);
-  if(parts.length < 3) return null;
-  const size = parts[parts.length-1];
-  const color = parts[parts.length-2];
-  const product = parts.slice(0, parts.length-2).join(' ');
-  if(!product||!color||!size||isNaN(price)) return null;
-  return {product, color, size, price};
-}
-function parsePublicado(txt){
-  // "publicado Adidas Spezial Pink 37" → {product, color, size}
-  const t = txt.trim().slice(PUBLICADO_KEYWORD.length).trim();
-  const parts = t.split(/\s+/);
-  if(parts.length < 3) return null;
-  const size = parts[parts.length-1];
-  const color = parts[parts.length-2];
-  const product = parts.slice(0, parts.length-2).join(' ');
-  if(!product||!color||!size) return null;
-  return {product, color, size};
+// ["Adidas","Spezial","Pink","37"] → {product, color, size}
+function splitItem(parts){
+  const size = parts[parts.length - 1];
+  const color = parts[parts.length - 2];
+  const product = parts.slice(0, parts.length - 2).join(' ');
+  return (product && color && size) ? {product, color, size} : null;
 }
 
+// "Error Adidas Spezial Brown 40 40€"
+function parseErrorVenta(txt){
+  const t = txt.trim();
+  if (!t.toLowerCase().startsWith('error ')) return null;
+  const sp = splitPrice(t.slice(6).trim());
+  if (!sp) return null;
+  const parts = sp.rest.split(/\s+/);
+  if (parts.length < 3) return null;
+  const item = splitItem(parts);
+  if (!item || isNaN(sp.price)) return null;
+  return {...item, price: sp.price};
+}
+// "publicado Adidas Spezial Pink 37"
+function parsePublicado(txt){
+  const parts = txt.trim().slice(PUBLICADO_KEYWORD.length).trim().split(/\s+/);
+  if (parts.length < 3) return null;
+  return splitItem(parts);
+}
+// "3 Nike Sand 43 40€"
 function parseVenta(txt){
-  const t=txt.trim();
-  const pm=t.match(/(\d+(?:[.,]\d+)?)\s*€?\s*$/); if(!pm) return null;
-  const price=parseFloat(pm[1].replace(',','.'));
-  const wp=t.slice(0,t.lastIndexOf(pm[0])).trim();
-  const parts=wp.split(/\s+/); if(parts.length<4) return null;
-  const numCuenta=parts[0]; if(!/^\d+$/.test(numCuenta)) return null;
-  const size=parts[parts.length-1];
-  const color=parts[parts.length-2];
-  const product=parts.slice(1,parts.length-2).join(' ');
-  if(!product||!color||!size||isNaN(price)) return null;
-  return{numCuenta,product,color,size,price};
+  const sp = splitPrice(txt.trim());
+  if (!sp) return null;
+  const parts = sp.rest.split(/\s+/);
+  if (parts.length < 4) return null;
+  const numCuenta = parts[0];
+  if (!/^\d+$/.test(numCuenta)) return null;
+  const item = splitItem(parts.slice(1));
+  if (!item || isNaN(sp.price)) return null;
+  return {numCuenta, ...item, price: sp.price};
+}
+
+function stamp(){
+  const d = new Date();
+  return {ts: Date.now(), time: pad(d.getHours()) + ':' + pad(d.getMinutes())};
+}
+function netText(e){ return e.message === 'timeout' ? 'Timeout' : 'Sin conexión'; }
+const sysMsg = (text, time, ts, kind) => kind ? {type: 'system', text, time, ts, kind} : {type: 'system', text, time, ts};
+
+// Reemplaza por identidad (seguro si la lista se vació/cambió mientras se esperaba al backend)
+function replaceMsg(list, oldMsg, newMsg){
+  const i = list.indexOf(oldMsg);
+  if (i !== -1) list[i] = newMsg;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// DOM HELPERS
+// ═════════════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+function h(tag, cls, text){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function pad(n){ return String(n).padStart(2, '0'); }
+
+const ICON = {
+  grip:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>',
+  trash: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>',
+  ok:    '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+  err:   '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--re)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  net:   '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--am)" stroke-width="2.2" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
+  spin:  '<div class="spin"></div>'
+};
+
+// Las URLs /view de Drive son páginas HTML; para <img> se usa el endpoint de miniaturas
+function driveImg(url, w){
+  const m = /\/file\/d\/([^/?#]+)/.exec(url || '');
+  return m ? 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w' + w : url;
+}
+
+// ── Scroll de chats ──────────────────────────────────────────────────────────
+const nearBottom = c => c.scrollHeight - c.scrollTop - c.clientHeight < STICK_THRESHOLD;
+function scrollBottom(c, smooth){
+  requestAnimationFrame(() => c.scrollTo({top: c.scrollHeight, behavior: smooth ? 'smooth' : 'auto'}));
+}
+
+// ── Render incremental: reutiliza nodos de mensajes que no han cambiado ────
+const nodeCache = new WeakMap();
+const msgSig = m => [m.type, m.syncStatus, m.syncError, m.syncErrKind, m.uploading, m.viewUrl, m.labelUrl].join('|');
+
+function patchChildren(parent, nodes){
+  let ref = parent.firstChild;
+  for (const n of nodes){
+    if (n === ref) { ref = ref.nextSibling; continue; }
+    parent.insertBefore(n, ref);
+  }
+  while (ref){ const next = ref.nextSibling; ref.remove(); ref = next; }
+}
+
+// scroll: 'instant' (al abrir panel) | 'force' (mensaje propio) | 'auto' (solo si ya estaba abajo)
+function renderList(c, msgs, build, emptyText, scroll){
+  const wasAtBottom = nearBottom(c);
+  if (!msgs.length){ c.replaceChildren(h('div', 'mnote', emptyText)); return; }
+  const nodes = [];
+  for (const m of msgs){
+    const sig = msgSig(m);
+    let entry = nodeCache.get(m);
+    if (!entry || entry.sig !== sig){ entry = {sig, nodes: build(m)}; nodeCache.set(m, entry); }
+    nodes.push(...entry.nodes);
+  }
+  patchChildren(c, nodes);
+  if (scroll === 'instant') scrollBottom(c, false);
+  else if (scroll === 'force' || wasAtBottom) scrollBottom(c, true);
+}
+
+// ── Builders de mensajes ─────────────────────────────────────────────────────
+function outBubble(text, time){
+  const w = h('div', 'msg out');
+  w.append(h('div', 'bub', text || ''), h('div', 'mtime', time));
+  return w;
+}
+function sysBubble(m){
+  const w = h('div', 'msg in');
+  w.append(h('div', 'bub sys' + (m.kind ? ' ' + m.kind : ''), m.text || ''), h('div', 'mtime', m.time));
+  return w;
+}
+function fileBubble(m){
+  const isPdf = (m.mimeType || '').includes('pdf');
+  const w = h('div', 'msg out');
+  let bub;
+  if (m.uploading){
+    bub = h('div', 'fbub uploading');
+    bub.innerHTML = `<div class="ficon loading"><div class="spin-sm"></div></div>
+      <div><div class="fname">${esc(m.name)}</div><div class="fsub">Subiendo a Drive...</div></div>`;
+  } else if (m.viewUrl){
+    bub = h('a', 'fbub clickable');
+    bub.href = m.viewUrl; bub.target = '_blank'; bub.rel = 'noopener';
+    bub.innerHTML = `<div class="ficon ${isPdf ? 'pdf' : 'img'}">${isPdf ? 'PDF' : 'IMG'}</div>
+      <div><div class="fname">${esc(m.name)}</div><div class="fsub ok">✓ Abrir en Drive</div></div>`;
+  } else {
+    bub = h('div', 'fbub');
+    bub.innerHTML = `<div class="ficon ${isPdf ? 'pdf' : 'img'}">${isPdf ? 'PDF' : 'IMG'}</div>
+      <div><div class="fname">${esc(m.name)}</div><div class="fsub err">✗ Error al subir</div></div>`;
+  }
+  w.append(bub, h('div', 'mtime', m.time));
+  return w;
+}
+function imgGrid(urls, time){
+  const w = h('div', 'msg out');
+  const grid = h('div', 'img-grid' + (urls.length === 1 ? ' single' : ''));
+  for (const url of urls){
+    const img = h('img');
+    img.loading = 'lazy'; img.decoding = 'async'; img.alt = '';
+    img.src = driveImg(url, 600);
+    img.dataset.lb = driveImg(url, 1600);
+    grid.append(img);
+  }
+  w.append(grid, h('div', 'mtime', time));
+  return w;
+}
+function fotosCard(m){
+  const results = m.results || [];
+  const w = h('div', 'msg in');
+  const card = h('div', 'fcard');
+  card.append(h('div', 'fc-hdr', 'Stock disponible (' + results.length + ')'));
+  for (const r of results){
+    const row = h('div', 'fc-row');
+    const info = h('div', 'fc-info');
+    info.append(h('div', 'fc-name', r.product), h('div', 'fc-sub', r.color + ' - T.' + r.size));
+    row.append(info);
+    if (r.url){
+      const a = h('a', 'fc-link', 'Ver fotos');
+      a.href = r.url; a.target = '_blank'; a.rel = 'noopener';
+      row.append(a);
+    }
+    card.append(row);
+  }
+  const f = results[0] || {};
+  card.append(h('div', 'fc-hint', 'publicado ' + (f.product || '') + ' ' + (f.color || '') + ' ' + (f.size || '')));
+  w.append(card, h('div', 'mtime', m.time));
+  return w;
+}
+function ventaStatus(m){
+  if (m.syncStatus === 'ok') return ['ok', '✓ Guardado en Sheets'];
+  if (m.syncStatus === 'error'){
+    return m.syncErrKind === 'network'
+      ? ['net', '⚠ ' + (m.syncError || 'sin conexión')]
+      : ['err', '✗ ' + (m.syncError || 'error')];
+  }
+  return ['ing', 'Guardando...'];
+}
+function ventaNodes(m){
+  const wu = outBubble(m.raw, m.time);
+  wu.dataset.lp = m.ts;
+
+  const wr = h('div', 'msg in');
+  const card = h('div', 'vcard');
+  const body = h('div', 'vc-b');
+  const pills = h('div', 'vc-pills');
+  pills.append(
+    h('span', 'vc-pill', m.color || ''),
+    h('span', 'vc-pill', 'T.' + (m.size || '')),
+    h('span', 'vc-pill', 'Cta.' + (m.numCuenta || ''))
+  );
+  body.append(h('div', 'vc-title', m.product || ''), pills, h('div', 'vc-price', (m.price || '') + '€'));
+  if (m.labelUrl){
+    const lbl = h('div', 'vc-label', '📎 ');
+    const a = h('a', null, 'Ver etiqueta en Drive');
+    a.href = m.labelUrl; a.target = '_blank'; a.rel = 'noopener';
+    lbl.append(a); body.append(lbl);
+  }
+  const foot = h('div', 'vc-foot');
+  const [cls, txt] = ventaStatus(m);
+  foot.append(h('span', 'vc-st ' + cls, txt));
+  if (m.syncStatus !== 'ok'){
+    const retry = h('button', 'vc-retry', 'reintentar');
+    retry.dataset.retry = m.id;
+    foot.append(retry);
+  }
+  card.append(body, foot);
+  wr.append(card, h('div', 'mtime', m.time));
+  return [wu, wr];
+}
+
+function accNodes(m){
+  switch (m.type){
+    case 'images':    return [imgGrid(m.urls || [], m.time)];
+    case 'file':      return [fileBubble(m)];
+    case 'system':
+    case 'searching': return [sysBubble(m)];
+    case 'fotos':     return [fotosCard(m)];
+    default:          return [outBubble(m.text, m.time)];
+  }
+}
+function saleNodes(m){
+  switch (m.type){
+    case 'text': { const w = outBubble(m.text, m.time); w.dataset.lp = m.ts; return [w]; }
+    case 'file':      return [fileBubble(m)];
+    case 'system':
+    case 'searching': return [sysBubble(m)];
+    case 'fotos':     return [fotosCard(m)];
+    case 'venta':     return ventaNodes(m);
+    default:          return [];
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// UI CHROME: badge, loading, toast, overlay, modales
+// ═════════════════════════════════════════════════════════════════════════════
+function setLoadMsg(t){ $('load-msg').textContent = t; }
+function hideLoading(){ $('loading').classList.add('off'); }
+
+let _badge = '';
+function setSyncBadge(s){
+  if (s === _badge) return;
+  _badge = s;
+  const b = $('tb-status');
+  if (s === 'ok'){ b.textContent = '● Sheets ✓'; b.className = 'ok'; }
+  else if (s === 'err'){ b.textContent = '● Sin conexión'; b.className = 'err'; }
+  else { b.textContent = '● Sheets'; b.className = ''; }
+}
+
+let _tt;
+function toast(msg, type){
+  const t = $('toast');
+  t.textContent = msg; t.className = 'toast on' + (type ? ' ' + type : '');
+  clearTimeout(_tt); _tt = setTimeout(() => { t.className = 'toast'; }, TOAST_MS);
+}
+const toastErr = (e, prefix) => toast(prefix + (isNetErr(e) ? ' (sin conexión)' : ''), isNetErr(e) ? 'net' : 'err');
+
+// type: 'l' cargando · 's' éxito · 'e' error de lógica · 'n' error de red
+let _sovTimer;
+function showSOv(type, title, msg){
+  clearTimeout(_sovTimer);
+  const ic = $('sov-ico');
+  $('sov-title').textContent = title;
+  $('sov-msg').textContent = msg;
+  $('sov-close').style.display = type === 'l' ? 'none' : 'block';
+  ic.className = type;
+  ic.innerHTML = type === 'l' ? ICON.spin : type === 's' ? ICON.ok : type === 'n' ? ICON.net : ICON.err;
+  $('sov').classList.add('on');
+  if (type === 's') _sovTimer = setTimeout(closeSOv, SOV_AUTOCLOSE_MS);
+}
+function closeSOv(){ clearTimeout(_sovTimer); $('sov').classList.remove('on'); }
+
+function openMo(id){ $(id).classList.add('on'); }
+function closeMo(id){ $(id).classList.remove('on'); }
+function openLB(src){ $('lb-img').src = src; $('lb').classList.add('on'); }
+function closeLB(){ $('lb').classList.remove('on'); }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// INIT — las tres lecturas van en paralelo
+// ═════════════════════════════════════════════════════════════════════════════
+function dedupeById(list){
+  const seen = new Set();
+  return list.filter(m => {
+    if (!m || !m.id) return true;
+    if (seen.has(m.id)) return false;
+    seen.add(m.id); return true;
+  });
+}
+function parseStored(m){
+  try {
+    const p = JSON.parse(m.text);
+    if (p && typeof p === 'object') return p;
+  } catch {}
+  return {type: m.type || 'text', text: m.text, time: m.time, ts: m.ts};
+}
+function loadMessages(rows){
+  const now = Date.now();
+  accounts.forEach(a => { accMsgs[a.id] = []; });
+  saleMsgs = [];
+  for (const m of rows){
+    if (m.ts && (now - m.ts) >= TTL) continue;
+    if (m.accountId === ACCOUNTS_ROW) continue;
+    if (m.accountId === SALES_ID){
+      saleMsgs.push(parseStored(m));
+    } else {
+      (accMsgs[m.accountId] ||= []).push(parseStored(m));
+    }
+  }
+  // Un reintento de guardado puede haber duplicado filas en Sheets
+  saleMsgs = dedupeById(saleMsgs);
+  for (const id in accMsgs) accMsgs[id] = dedupeById(accMsgs[id]);
+}
+
+async function init(){
+  setLoadMsg('Cargando datos...');
+  const [ar, er, mr] = await Promise.allSettled([Api.getAccounts(), Api.getEmails(), Api.getMessages()]);
+
+  if (ar.status === 'fulfilled' && ar.value.ok && ar.value.accounts && ar.value.accounts.length){
+    accounts = ar.value.accounts;
+    nextNum = Math.max(...accounts.map(a => parseInt(a.name) || 0), accounts.length) + 1;
+  }
+  if (er.status === 'fulfilled' && er.value.ok && er.value.emails) accEmails = er.value.emails;
+  if (mr.status === 'fulfilled' && mr.value.ok) loadMessages(mr.value.msgs || []);
+
+  const failed = [ar, mr].filter(r => r.status === 'rejected').map(r => r.reason);
+  if (failed.length){
+    setSyncBadge('err');
+    if (failed.some(isNetErr)) toast('Sin conexión — modo offline', 'net');
+    else toast('Error al cargar datos de Sheets', 'err');
+  } else {
+    setSyncBadge('ok');
+  }
+  hideLoading(); buildDrawer(); showSales();
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// DRAWER
+// ═════════════════════════════════════════════════════════════════════════════
+function openDrawer(){ $('drawer').classList.add('on'); $('dov').classList.add('on'); }
+function closeDrawer(){ $('drawer').classList.remove('on'); $('dov').classList.remove('on'); }
+
+// Estructura: solo cuando cambian las cuentas (crear, borrar, renombrar, reordenar)
+function buildDrawer(){
+  const frag = document.createDocumentFragment();
+  for (const a of accounts){
+    const row = h('div', 'drow'); row.dataset.id = a.id;
+    const grip = h('div', 'd-grip'); grip.innerHTML = ICON.grip;
+    const btn = h('button', 'd-acc-btn');
+    btn.append(h('div', 'd-av', a.name), h('span', 'd-name', a.name), h('div', 'd-dot'));
+    const del = h('button', 'd-del'); del.innerHTML = ICON.trash; del.setAttribute('aria-label', 'Eliminar cuenta');
+    row.append(grip, btn, del);
+    frag.append(row);
+  }
+  $('dlist').replaceChildren(frag);
+  syncDrawer();
+}
+// Estado: barato, se llama tras cada mensaje/cambio de vista
+function syncDrawer(){
+  const n = accounts.length;
+  $('d-count').textContent = n ? n + ' cuenta' + (n === 1 ? '' : 's') : 'Sin cuentas';
+  $('d-sales').classList.toggle('on', view === 'sales');
+  for (const row of $('dlist').children){
+    const id = row.dataset.id;
+    row.classList.toggle('on', id === curId && view === 'chat');
+    row.classList.toggle('hm', !!(accMsgs[id] || []).length);
+  }
+}
+
+// Reordenar arrastrando el grip. Los listeners son pasivos: el grip tiene
+// touch-action:none, así que no hace falta preventDefault y el scroll del
+// listado mantiene su inercia nativa.
+let drag = null;
+function onDragStart(e){
+  const grip = e.target.closest('.d-grip'); if (!grip) return;
+  const rows = [...$('dlist').children];
+  drag = {from: rows.indexOf(grip.parentElement), rows, rects: rows.map(r => r.getBoundingClientRect()), over: null};
+}
+function onDragMove(e){
+  if (!drag) return;
+  const y = e.touches[0].clientY;
+  const i = drag.rects.findIndex(rc => y >= rc.top && y <= rc.bottom);
+  const over = (i !== -1 && i !== drag.from) ? i : null;
+  if (over === drag.over) return;
+  if (drag.over !== null) drag.rows[drag.over].classList.remove('dov2');
+  if (over !== null) drag.rows[over].classList.add('dov2');
+  drag.over = over;
+}
+function onDragEnd(commit){
+  if (!drag) return;
+  const {from, over, rows} = drag;
+  drag = null;
+  if (commit && over !== null){
+    const [m] = accounts.splice(from, 1);
+    accounts.splice(over, 0, m);
+    pushAccounts();
+    buildDrawer();
+  } else if (over !== null){
+    rows[over].classList.remove('dov2');
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PANELES
+// ═════════════════════════════════════════════════════════════════════════════
+const PANELS = {empty: 'p-empty', chat: 'p-chat', sales: 'p-sales', stock: 'p-stock'};
+function setView(v){
+  view = v;
+  for (const k in PANELS) $(PANELS[k]).classList.toggle('on', k === v);
+  $('btn-sales').classList.toggle('on', v === 'sales');
+}
+function showEmpty(){ curId = null; setView('empty'); syncDrawer(); }
+function showChat(id){
+  curId = id; setView('chat');
+  closeAccClearBar();
+  syncDrawer(); renderChatHeader(); renderAcc('instant');
+}
+function showSales(){
+  setView('sales');
+  closeClearBar(); syncDrawer(); renderSales('instant');
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CHAT DE CUENTA
+// ═════════════════════════════════════════════════════════════════════════════
+function renderChatHeader(){
+  const a = accounts.find(x => x.id === curId); if (!a) return;
+  $('c-av').textContent = a.name;
+  $('c-title').textContent = 'Cuenta ' + a.name;
+  $('c-sub').textContent = 'cuenta ' + a.name + ' · activa';
+  const n = (accMsgs[a.id] || []).length;
+  $('c-cnt').textContent = n + (n === 1 ? ' msg' : ' msgs');
+  const email = accEmails[a.name] || '';
+  const btn = $('c-email-btn');
+  btn.href = email ? 'mailto:' + email + '?subject=Fotos+cuenta+' + encodeURIComponent(a.name) : '#';
+  btn.title = email ? 'Enviar fotos a ' + email : 'Email no encontrado';
+  btn.classList.toggle('dim', !email);
+}
+function renderAcc(scroll = 'auto'){
+  if (view !== 'chat') return;
+  renderList($('c-msgs'), accMsgs[curId] || [], accNodes, 'Sin mensajes · sube fotos o escribe una nota', scroll);
+}
+// Refresca la UI solo si esa cuenta sigue abierta
+function refreshAcc(accId, scroll){
+  syncDrawer();
+  if (view === 'chat' && curId === accId){ renderChatHeader(); renderAcc(scroll); }
+}
+
+async function uploadAccImages(files){
+  const accId = curId;
+  const {ts, time} = stamp();
+  const bar = $('c-upload-progress'), barMsg = $('c-upload-msg');
+  const n = files.length;
+  let done = 0;
+  barMsg.textContent = `Subiendo foto 1/${n}...`;
+  bar.classList.add('on');
+
+  // Subidas en paralelo (con límite) manteniendo el orden original
+  const urls = new Array(n).fill(null);
+  const errors = [];
+  let next = 0;
+  const worker = async () => {
+    while (next < n){
+      const i = next++;
+      try { urls[i] = (await Api.uploadFile(files[i])).viewUrl; }
+      catch (e) { errors.push(e); }
+      done++;
+      barMsg.textContent = `Subiendo foto ${Math.min(done + 1, n)}/${n}...`;
+    }
+  };
+  await Promise.all(Array.from({length: Math.min(UPLOAD_CONCURRENCY, n)}, worker));
+  bar.classList.remove('on');
+
+  const ok = urls.filter(Boolean);
+  if (errors.length) toastErr(errors[0], 'Error subiendo ' + errors.length + ' foto' + (errors.length > 1 ? 's' : ''));
+  if (!ok.length) return;
+
+  const msg = {id: 'imgs' + ts, type: 'images', urls: ok, time, ts};
+  (accMsgs[accId] ||= []).push(msg);
+  persistAcc(accId, msg);
+  refreshAcc(accId, 'force');
+  if (!errors.length) toast(ok.length + ' foto' + (ok.length > 1 ? 's' : '') + ' subida' + (ok.length > 1 ? 's' : '') + ' ✓', 'ok');
+}
+
+async function sendAccMsg(){
+  const ta = $('c-ta'); const txt = ta.value.trim();
+  if (!txt || !curId) return;
+  const accId = curId;
+  const list = (accMsgs[accId] ||= []);
+  const {ts, time} = stamp();
+  const userMsg = {type: 'text', text: txt, time, ts};
+  const push = (m, save) => { list.push(m); if (save) persistAcc(accId, m); };
+
+  // "Error Adidas Spezial Brown 40 40€" → deshacer venta
+  const errorVenta = parseErrorVenta(txt);
+  if (errorVenta){
+    push(userMsg, true); resetTa(ta); refreshAcc(accId, 'force');
+    try {
+      const res = await Api.undoVenta(errorVenta);
+      const m = res.ok
+        ? sysMsg('Venta deshecha: ' + errorVenta.product + ' ' + errorVenta.color + ' T.' + errorVenta.size + ' vuelve a Available', time, ts + 1)
+        : sysMsg('Error: ' + (res.error || 'no encontrado'), time, ts + 1, 'err');
+      push(m, true);
+    } catch (e) {
+      push(isNetErr(e)
+        ? sysMsg('⚠ ' + netText(e) + ' — no se pudo deshacer la venta', time, ts + 1, 'net')
+        : sysMsg('Error: ' + e.message, time, ts + 1, 'err'), false);
+    }
+    refreshAcc(accId); return;
+  }
+
+  // "error" → desmarcar el último publicado automáticamente
+  if (isErrorCmd(txt)){
+    push(userMsg, true); resetTa(ta);
+    const last = lastAutoMarked[accId];
+    if (!last){
+      push(sysMsg('No hay ninguno marcado recientemente', time, ts + 1), false);
+      refreshAcc(accId, 'force'); return;
+    }
+    refreshAcc(accId, 'force');
+    try {
+      const res = await Api.desmarcarPublicado(last);
+      if (!res.ok) throw new ApiError('logic', res.error || 'error');
+      push(sysMsg('Desmarcado: ' + last.product + ' ' + last.color + ' T.' + last.size + ' — vuelve a stock', time, ts + 1), true);
+      delete lastAutoMarked[accId];
+    } catch (e) {
+      push(isNetErr(e)
+        ? sysMsg('⚠ ' + netText(e) + ' — no se pudo desmarcar', time, ts + 1, 'net')
+        : sysMsg('Error al desmarcar: ' + e.message, time, ts + 1, 'err'), false);
+    }
+    refreshAcc(accId); return;
+  }
+
+  // "publicado X Y Z" → marcar manualmente
+  if (isPublicadoCmd(txt)){
+    const p = parsePublicado(txt);
+    if (!p) return;
+    push(userMsg, false); resetTa(ta); refreshAcc(accId, 'force');
+    try {
+      const res = await Api.marcarPublicado(p);
+      push(res.ok
+        ? sysMsg('Marcado: ' + p.product + ' ' + p.color + ' T.' + p.size, time, ts + 1)
+        : sysMsg('Error: ' + res.error, time, ts + 1, 'err'), false);
+    } catch (e) {
+      push(isNetErr(e) ? sysMsg('⚠ Sin conexión', time, ts + 1, 'net') : sysMsg('Error: ' + e.message, time, ts + 1, 'err'), false);
+    }
+    refreshAcc(accId); return;
+  }
+
+  // "adidas" / "birkenstock" / "shoes"... → buscar stock y marcar como publicado
+  if (isFotoQuery(txt)){
+    push(userMsg, false);
+    const searching = {type: 'searching', id: 's' + ts, text: 'Buscando stock...', time, ts: ts + 1};
+    push(searching, false);
+    resetTa(ta); refreshAcc(accId, 'force');
+    try {
+      const res = await Api.getFotos(txt);
+      if (res.ok && res.results && res.results.length){
+        const shown = res.results.slice(0, ACC_FOTOS_MAX);
+        const fotosMsg = {type: 'fotos', results: shown, query: txt, time, ts: ts + 1, autoMarked: shown[0]};
+        replaceMsg(list, searching, fotosMsg);
+        lastAutoMarked[accId] = shown[0];
+        refreshAcc(accId);
+        persistAcc(accId, fotosMsg);
+        await Promise.all(shown.map(r => Api.marcarPublicado(r).catch(() => {})));
+        return;
+      }
+      const m = res.ok
+        ? sysMsg(res.msg || 'No hay stock disponible (>= ' + DIAS_ENTREGA + ' días, no publicado)', time, ts + 1)
+        : sysMsg(res.error || 'No hay stock disponible', time, ts + 1, 'err');
+      replaceMsg(list, searching, m);
+      persistAcc(accId, m);
+    } catch (e) {
+      replaceMsg(list, searching, isNetErr(e)
+        ? sysMsg('⚠ ' + netText(e) + ' — no se pudo buscar stock', time, ts + 1, 'net')
+        : sysMsg('Error: ' + e.message, time, ts + 1, 'err'));
+    }
+    refreshAcc(accId); return;
+  }
+
+  // Nota normal
+  push(userMsg, true); resetTa(ta); refreshAcc(accId, 'force');
+}
+
+function openAccClearBar(){ $('c-clear-bar').classList.add('on'); }
+function closeAccClearBar(){ $('c-clear-bar').classList.remove('on'); }
+function confirmAccClear(){
+  if (!curId) return;
+  const accId = curId;
+  accMsgs[accId] = []; closeAccClearBar(); refreshAcc(accId);
+  Api.deleteAccount(accId).catch(() => {});
+  toast('Chat vaciado', 'ok');
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CHAT DE VENTAS
+// ═════════════════════════════════════════════════════════════════════════════
+function renderSales(scroll = 'auto'){
+  if (view !== 'sales') return;
+  renderList($('s-msgs'), saleMsgs, saleNodes, '1º sube etiqueta · 2º escribe la venta', scroll);
+}
+
+// Borrar mensaje (pulsación larga / clic derecho)
+let _delMsgTs = null;
+function askDelMsg(ts){ _delMsgTs = ts; $('del-msg-bar').classList.add('on'); }
+function cancelDelMsg(){ _delMsgTs = null; $('del-msg-bar').classList.remove('on'); }
+function confirmDelMsg(){
+  if (_delMsgTs === null) return;
+  const ts = _delMsgTs;
+  saleMsgs = saleMsgs.filter(m => m.ts !== ts);
+  Api.deleteSaleMsg(ts).catch(() => {});
+  cancelDelMsg(); renderSales();
+}
+
+function bindLongPress(container, onLong){
+  let timer = null, x0 = 0, y0 = 0;
+  const cancel = () => { clearTimeout(timer); timer = null; };
+  container.addEventListener('touchstart', e => {
+    const t = e.target.closest('[data-lp]'); if (!t) return;
+    cancel();
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+    timer = setTimeout(() => { timer = null; navigator.vibrate?.(10); onLong(Number(t.dataset.lp)); }, LONG_PRESS_MS);
+  }, {passive: true});
+  container.addEventListener('touchmove', e => {
+    if (!timer) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - x0) > 10 || Math.abs(t.clientY - y0) > 10) cancel();
+  }, {passive: true});
+  container.addEventListener('touchend', cancel, {passive: true});
+  container.addEventListener('touchcancel', cancel, {passive: true});
+  container.addEventListener('contextmenu', e => {
+    const t = e.target.closest('[data-lp]'); if (!t) return;
+    e.preventDefault(); onLong(Number(t.dataset.lp));
+  });
+}
+
+// Subir etiqueta (PDF o imagen)
+function uploadLabel(file){
+  const {ts, time} = stamp();
+  const id = 'f' + ts;
+  const fileMsg = {id, type: 'file', name: file.name, mimeType: file.type, uploading: true, viewUrl: '', time, ts};
+  const pf = {id, name: file.name, mimeType: file.type, viewUrl: '', time, ts};
+  saleMsgs.push(fileMsg);
+  pendingFile = pf;
+  renderSales('force');
+
+  // pf.upload se resuelve con la URL ('' si falla); una venta enviada antes de terminar la espera
+  pf.upload = Api.uploadFile(file).then(res => {
+    fileMsg.uploading = false; fileMsg.viewUrl = res.viewUrl;
+    pf.viewUrl = res.viewUrl;
+    persistSale(fileMsg);
+    toast('Etiqueta subida ✓', 'ok');
+    return res.viewUrl;
+  }, e => {
+    fileMsg.uploading = false;
+    toastErr(e, 'Error al subir etiqueta');
+    return '';
+  }).finally(() => renderSales());
 }
 
 async function sendSaleMsg(){
-  const ta=document.getElementById('s-ta'); const txt=ta.value.trim(); if(!txt) return;
-  const now=new Date(); const ts=Date.now();
-  const time=pad(now.getHours())+':'+pad(now.getMinutes());
+  const ta = $('s-ta'); const txt = ta.value.trim(); if (!txt) return;
+  const {ts, time} = stamp();
 
-  // Comando: publicado Adidas Spezial Pink 37
-  if(isPublicadoCmd(txt)){
-    const p=parsePublicado(txt);
-    if(p){
-      saleMsgs.push({type:'text',text:txt,time,ts});
-      ta.value=''; ta.style.height='auto'; renderSaleMsgs();
-      try{
-        const res=await POST({action:'marcarPublicado',product:p.product,color:p.color,size:p.size});
-        if(res.ok){
-          saleMsgs.push({type:'system',text:'✓ Marcado como publicado: '+p.product+' '+p.color+' '+p.size,time,ts:ts+1});
-        } else {
-          saleMsgs.push({type:'system',text:'✗ Error: '+res.error,time,ts:ts+1});
-        }
-        renderSaleMsgs();
-      }catch(e){
-        saleMsgs.push({type:'system',text:'✗ Sin conexión',time,ts:ts+1});
-        renderSaleMsgs();
-      }
+  // "publicado Adidas Spezial Pink 37"
+  if (isPublicadoCmd(txt)){
+    const p = parsePublicado(txt);
+    if (!p) return;
+    saleMsgs.push({type: 'text', text: txt, time, ts});
+    resetTa(ta); renderSales('force');
+    try {
+      const res = await Api.marcarPublicado(p);
+      saleMsgs.push(res.ok
+        ? sysMsg('✓ Marcado como publicado: ' + p.product + ' ' + p.color + ' ' + p.size, time, ts + 1)
+        : sysMsg('✗ Error: ' + res.error, time, ts + 1, 'err'));
+    } catch (e) {
+      saleMsgs.push(isNetErr(e) ? sysMsg('⚠ Sin conexión', time, ts + 1, 'net') : sysMsg('✗ Error: ' + e.message, time, ts + 1, 'err'));
     }
+    renderSales(); return;
+  }
+
+  // "adidas" / "birkenstock" / "shoes"...
+  if (isFotoQuery(txt)){
+    const list = saleMsgs;
+    list.push({type: 'text', text: txt, time, ts});
+    const searching = {type: 'searching', id: 's' + ts, text: 'Buscando stock disponible...', time, ts: ts + 1};
+    list.push(searching);
+    resetTa(ta); renderSales('force');
+    try {
+      const res = await Api.getFotos(txt);
+      replaceMsg(list, searching, res.ok && res.results && res.results.length
+        ? {type: 'fotos', results: res.results, query: txt, time, ts: ts + 1}
+        : sysMsg(res.msg || res.error || 'Sin resultados', time, ts + 1, res.ok ? undefined : 'err'));
+    } catch (e) {
+      replaceMsg(list, searching, isNetErr(e)
+        ? sysMsg('⚠ ' + netText(e) + ' al buscar stock', time, ts + 1, 'net')
+        : sysMsg('✗ Error al buscar: ' + e.message, time, ts + 1, 'err'));
+    }
+    renderSales(); return;
+  }
+
+  // Venta: "3 Nike Sand 43 40€"
+  const parsed = parseVenta(txt);
+  if (parsed){
+    const id = 'v' + ts;
+    const pf = pendingFile; pendingFile = null;
+    const msg = {
+      id, type: 'venta', raw: txt, ...parsed, time, ts,
+      syncStatus: 'syncing', syncError: '', syncErrKind: '',
+      labelUrl: pf ? pf.viewUrl : '', labelName: pf ? pf.name : '',
+      ventaId: 'v_' + ts + '_' + Math.random().toString(36).slice(2, 7)
+    };
+    // La etiqueta aún se está subiendo: la venta no la necesita, solo el mensaje guardado
+    if (pf && !pf.viewUrl && pf.upload){
+      labelWait.set(id, pf.upload.then(url => { if (url){ msg.labelUrl = url; renderSales(); } }));
+    }
+    saleMsgs.push(msg);
+    resetTa(ta); renderSales('force');
+    await syncVenta(msg);
     return;
   }
 
-  // Query de fotos: adidas, birkenstock, shoes, etc.
-  if(isFotoQuery(txt)){
-    saleMsgs.push({type:'text',text:txt,time,ts});
-    ta.value=''; ta.style.height='auto';
-    // Mostrar burbuja "buscando..."
-    const searchId='s'+ts;
-    saleMsgs.push({type:'searching',id:searchId,text:'Buscando stock disponible...',time,ts:ts+1});
-    renderSaleMsgs();
-    try{
-      const res=await GET({action:'getFotos',query:encodeURIComponent(txt)});
-      // Reemplazar burbuja searching con resultado
-      const idx=saleMsgs.findIndex(m=>m.id===searchId);
-      if(res.ok && res.results && res.results.length>0){
-        saleMsgs[idx]={type:'fotos',results:res.results,query:txt,time,ts:ts+1};
-      } else {
-        const msg=res.msg||res.error||'Sin resultados';
-        saleMsgs[idx]={type:'system',text:msg,time,ts:ts+1};
-      }
-      renderSaleMsgs();
-    }catch(e){
-      const idx=saleMsgs.findIndex(m=>m.id===searchId);
-      saleMsgs[idx]={type:'system',text:'✗ Error al buscar: '+e.message,time,ts:ts+1};
-      renderSaleMsgs();
+  // Texto libre
+  const msg = {type: 'text', text: txt, time, ts};
+  saleMsgs.push(msg);
+  persistSale(msg);
+  resetTa(ta); renderSales('force');
+}
+
+async function syncVenta(m){
+  m.syncStatus = 'syncing'; m.syncError = ''; m.syncErrKind = '';
+  renderSales();
+  showSOv('l', 'Guardando en Sheets...', 'Buscando ' + m.product + ' ' + m.color + ' T.' + m.size);
+
+  let res;
+  try {
+    res = await Api.registerVenta(m);   // reintentos de red silenciosos dentro
+  } catch (e) {
+    m.syncStatus = 'error'; m.syncErrKind = e.kind;
+    if (isNetErr(e)){
+      const n = VENTA_RETRY_DELAYS.length + 1;
+      m.syncError = e.message === 'timeout' ? 'Timeout tras ' + n + ' intentos. Pulsa reintentar.' : 'Sin conexión tras ' + n + ' intentos.';
+      showSOv('n', 'Sin conexión', m.syncError);
+    } else {
+      m.syncError = e.message;
+      showSOv('e', 'No se pudo guardar', m.syncError);
     }
+    renderSales();
     return;
   }
 
-  const parsed=parseVenta(txt);
-  if(parsed){
-    const id='v'+ts;
-    const labelUrl=pendingFile?pendingFile.viewUrl:'';
-    const labelName=pendingFile?pendingFile.name:'';
-    const ventaId='v_'+ts+'_'+Math.random().toString(36).slice(2,7);
-    const msg={id,type:'venta',raw:txt,...parsed,time,ts,syncStatus:'syncing',syncError:'',labelUrl,labelName,ventaId};
-    saleMsgs.push(msg);
-    pendingFile=null;
-    ta.value=''; ta.style.height='auto';
-    renderSaleMsgs();
-    await doSyncVenta(id);
-  } else {
-    const msg={type:'text',text:txt,time,ts};
-    saleMsgs.push(msg);
-    POST({action:'saveMessage',accountId:'__sales__',accountName:'sales',
-      type:'text',text:JSON.stringify(msg),time,ts}).catch(()=>{});
-    ta.value=''; ta.style.height='auto';
-    renderSaleMsgs();
-  }
+  // Venta guardada. Lo que falle a partir de aquí no se muestra al usuario.
+  m.syncStatus = 'ok'; m.syncEmail = res.email; m.syncPrice = res.price;
+  renderSales();
+  showSOv('s', '✓ Guardado en Sheets',
+    m.product + ' ' + m.color + ' T.' + m.size + '\nComprador: ' + res.email + '\nPrecio: ' + res.price + '€'
+    + ((m.labelUrl || labelWait.has(m.id)) ? '\n📎 Etiqueta guardada' : ''));
+
+  const wait = labelWait.get(m.id);
+  if (wait){ await wait; labelWait.delete(m.id); }
+  persistSale({...m, syncStatus: 'ok'}, SAVE_RETRY_DELAYS);
 }
 
-async function doSyncVenta(id){
-  const m=saleMsgs.find(x=>x.id===id); if(!m) return;
-  showSOv('l','Guardando en Sheets...','Buscando '+m.product+' '+m.color+' T.'+m.size);
-
-  const MAX_RETRIES = 3;
-  const RETRY_DELAYS = [2000, 4000, 7000]; // espera creciente entre intentos
-
-  for(let attempt=0; attempt<MAX_RETRIES; attempt++){
-    try{
-      if(attempt>0){
-        showSOv('l','Reintentando ('+(attempt+1)+'/'+MAX_RETRIES+')...','Buscando '+m.product+' '+m.color+' T.'+m.size);
-        await new Promise(r=>setTimeout(r, RETRY_DELAYS[attempt-1]));
-      }
-
-      const res=await POST({numCuenta:m.numCuenta,product:m.product,color:m.color,size:m.size,price:m.price,ventaId:m.ventaId||m.id});
-
-      if(res.ok){
-        m.syncStatus='ok'; m.syncEmail=res.email; m.syncPrice=res.price;
-        renderSaleMsgs();
-        // Guardar estado con reintentos silenciosos
-        const saveOk = async () => {
-          for(let i=0;i<3;i++){
-            try{
-              await POST({action:'saveMessage',accountId:'__sales__',accountName:'sales',
-                type:'venta',text:JSON.stringify({...m,syncStatus:'ok'}),time:m.time,ts:m.ts});
-              return;
-            }catch(e){ await new Promise(r=>setTimeout(r,2000)); }
-          }
-        };
-        saveOk();
-        showSOv('s','✓ Guardado en Sheets',
-          m.product+' '+m.color+' T.'+m.size+'\nComprador: '+res.email+'\nPrecio: '+res.price+'€'
-          +(m.labelUrl?'\n📎 Etiqueta guardada':''));
-        return; // éxito, salir del loop
-      } else {
-        // Error de lógica (no hay stock, cuenta no encontrada...) — no reintentar
-        throw new Error('__noretrry__:' + (res.error||'error'));
-      }
-
-    }catch(e){
-      // Error de lógica → mostrar directamente sin reintentar
-      if(e.message.startsWith('__noretrry__:')){
-        const err = e.message.replace('__noretrry__:','');
-        m.syncStatus='error'; m.syncError=err;
-        renderSaleMsgs(); showSOv('e','No se pudo guardar', err);
-        return;
-      }
-
-      // Último intento fallido
-      if(attempt===MAX_RETRIES-1){
-        const err = e.message==='timeout'
-          ? 'Timeout tras '+MAX_RETRIES+' intentos. Pulsa reintentar.'
-          : e.message.includes('fetch')||e.message.includes('Network')
-            ? 'Sin conexión tras '+MAX_RETRIES+' intentos.'
-            : 'Error: '+e.message;
-        m.syncStatus='error'; m.syncError=err;
-        renderSaleMsgs(); showSOv('e','No se pudo guardar', err);
-      }
-      // Si no es el último, el loop continúa con el siguiente intento
-    }
-  }
-}
-async function retrySale(id){
-  const m=saleMsgs.find(x=>x.id===id); if(!m) return;
-  m.syncStatus='syncing'; m.syncError=''; renderSaleMsgs(); await doSyncVenta(id);
+function retrySale(id){
+  const m = saleMsgs.find(x => x.id === id);
+  if (!m || m.syncStatus === 'syncing') return;
+  syncVenta(m);
 }
 
-// ── CLEAR ACCOUNT CHAT ───────────────────────────────────────────────────────
-function openAccClearBar(){ document.getElementById('c-clear-bar').style.display='flex'; }
-function closeAccClearBar(){ document.getElementById('c-clear-bar').style.display='none'; }
-async function confirmAccClear(){
-  if(!curId) return;
-  accMsgs[curId]=[]; closeAccClearBar(); renderAccMsgs(); renderChatHeader();
-  try{ await POST({action:'deleteAccount', accountId:curId}); }catch(e){}
-  toast('Chat vaciado','ok');
+function openClearBar(){ $('clear-bar').classList.add('on'); }
+function closeClearBar(){ $('clear-bar').classList.remove('on'); }
+function confirmClear(){
+  saleMsgs = []; pendingFile = null; closeClearBar(); renderSales();
+  Api.deleteAccount(SALES_ID).catch(() => {});
+  toast('Chat limpiado', 'ok');
 }
 
-// ── CLEAR──────────────────────────────────────────────────────────────────
-function openClearBar(){document.getElementById('clear-bar').classList.add('on');}
-function closeClearBar(){document.getElementById('clear-bar').classList.remove('on');}
-async function confirmClear(){
-  saleMsgs=[]; pendingFile=null; closeClearBar(); renderSaleMsgs();
-  try{await POST({action:'deleteAccount',accountId:'__sales__'});}catch(e){}
-  toast('Chat limpiado','ok');
-}
-
-// ── ACCOUNTS ──────────────────────────────────────────────────────────────────
-async function createAccount(){
-  const name=String(nextNum); nextNum++;
-  const id='acc_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-  accounts.push({id,name}); accMsgs[id]=[];
+// ═════════════════════════════════════════════════════════════════════════════
+// CUENTAS
+// ═════════════════════════════════════════════════════════════════════════════
+function createAccount(){
+  const name = String(nextNum); nextNum++;
+  const id = 'acc_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  accounts.push({id, name}); accMsgs[id] = [];
   buildDrawer(); showChat(id);
-  await pushAccounts(); toast('Cuenta "'+name+'" creada','ok');
+  pushAccounts();
+  toast('Cuenta "' + name + '" creada', 'ok');
 }
+
+let _delAccId = null;
 function askDel(id){
-  const a=accounts.find(x=>x.id===id); if(!a) return;
-  document.getElementById('mo-del-title').textContent='¿Eliminar cuenta "'+a.name+'"?';
-  document.getElementById('mo-del-desc').textContent='Se borrarán todos sus mensajes.';
-  document.getElementById('mo-del-ok').onclick=()=>doDel(id);
+  const a = accounts.find(x => x.id === id); if (!a) return;
+  _delAccId = id;
+  $('mo-del-title').textContent = '¿Eliminar cuenta "' + a.name + '"?';
+  $('mo-del-desc').textContent = 'Se borrarán todos sus mensajes.';
   openMo('mo-del');
 }
-async function doDel(id){
+function doDel(){
   closeMo('mo-del');
-  const idx=accounts.findIndex(x=>x.id===id); if(idx===-1) return;
-  accounts.splice(idx,1); delete accMsgs[id];
-  if(curId===id){curId=null;accounts.length?showChat(accounts[Math.min(idx,accounts.length-1)].id):showEmpty();}
-  else buildDrawer();
-  try{await POST({action:'deleteAccount',accountId:id});}catch(e){}
-  await pushAccounts(); toast('Cuenta eliminada','');
+  const id = _delAccId; _delAccId = null;
+  const idx = accounts.findIndex(x => x.id === id); if (idx === -1) return;
+  accounts.splice(idx, 1); delete accMsgs[id];
+  buildDrawer();
+  if (curId === id){
+    curId = null;
+    accounts.length ? showChat(accounts[Math.min(idx, accounts.length - 1)].id) : showEmpty();
+  }
+  Promise.all([Api.deleteAccount(id).catch(() => {}), pushAccounts()]);
+  toast('Cuenta eliminada', '');
 }
+
 function openRename(){
-  const a=accounts.find(x=>x.id===curId); if(!a) return;
-  const inp=document.getElementById('mo-rename-in'); inp.value=a.name;
-  openMo('mo-rename'); setTimeout(()=>{inp.focus();inp.select();},150);
+  const a = accounts.find(x => x.id === curId); if (!a) return;
+  const inp = $('mo-rename-in'); inp.value = a.name;
+  openMo('mo-rename'); setTimeout(() => { inp.focus(); inp.select(); }, 150);
 }
-async function doRename(){
-  const v=document.getElementById('mo-rename-in').value.trim(); if(!v) return;
-  const a=accounts.find(x=>x.id===curId); if(!a) return;
-  a.name=v; closeMo('mo-rename'); buildDrawer(); renderChatHeader();
-  await pushAccounts(); toast('"'+v+'"','ok');
-}
-async function pushAccounts(){
-  try{await POST({action:'saveAccount',accounts});}catch(e){}
+function doRename(){
+  const v = $('mo-rename-in').value.trim(); if (!v) return;
+  const a = accounts.find(x => x.id === curId); if (!a) return;
+  a.name = v; closeMo('mo-rename'); buildDrawer(); renderChatHeader();
+  pushAccounts();
+  toast('"' + v + '"', 'ok');
 }
 
-// ── SYNC OVERLAY ──────────────────────────────────────────────────────────────
-function showSOv(type,title,msg){
-  const ic=document.getElementById('sov-ico'),ti=document.getElementById('sov-title'),
-    ms=document.getElementById('sov-msg'),cl=document.getElementById('sov-close');
-  ti.textContent=title; ms.textContent=msg; cl.style.display='none';
-  if(type==='l'){ic.className='l';ic.innerHTML='<div class="spin"></div>';}
-  else if(type==='s'){ic.className='s';ic.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';cl.style.display='block';setTimeout(closeSOv,4000);}
-  else{ic.className='e';ic.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--re)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';cl.style.display='block';}
-  document.getElementById('sov').classList.add('on');
-}
-function closeSOv(){document.getElementById('sov').classList.remove('on');}
+// ═════════════════════════════════════════════════════════════════════════════
+// INPUTS
+// ═════════════════════════════════════════════════════════════════════════════
+function autosize(ta){ ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; }
+function resetTa(ta){ ta.value = ''; ta.style.height = 'auto'; }
 
-// ── MODALS ────────────────────────────────────────────────────────────────────
-function openMo(id){document.getElementById(id).classList.add('on');}
-function closeMo(id){document.getElementById(id).classList.remove('on');}
-function openLB(src){document.getElementById('lb-img').src=src;document.getElementById('lb').classList.add('on');}
-function closeLB(){document.getElementById('lb').classList.remove('on');}
-
-// ── TOAST ─────────────────────────────────────────────────────────────────────
-let _tt;
-function toast(msg,type){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast on'+(type?' '+type:'');
-  clearTimeout(_tt); _tt=setTimeout(()=>{t.className='toast';},2500);
+// Enviar sin cerrar el teclado en móvil
+function bindComposer(taId, sendId, send){
+  const ta = $(taId), btn = $(sendId);
+  ta.addEventListener('input', () => autosize(ta));
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); }
+  });
+  let keepFocus = false;
+  btn.addEventListener('pointerdown', () => { keepFocus = document.activeElement === ta; });
+  btn.addEventListener('mousedown', e => e.preventDefault());
+  btn.addEventListener('click', () => { if (keepFocus) ta.focus(); send(); });
 }
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function pad(n){return String(n).padStart(2,'0');}
+// ═════════════════════════════════════════════════════════════════════════════
+// EVENTOS
+// ═════════════════════════════════════════════════════════════════════════════
+// Necesario para que :active funcione en iOS Safari
+document.addEventListener('touchstart', () => {}, {passive: true});
 
-// ── EVENTS ────────────────────────────────────────────────────────────────────
-document.getElementById('menu-btn').addEventListener('click',openDrawer);
-document.getElementById('dov').addEventListener('click',closeDrawer);
-// btn-new is now only in drawer
-document.getElementById('btn-sales').addEventListener('click',showSales);
-document.getElementById('emp-btn').addEventListener('click',showSales);
-document.getElementById('d-new').addEventListener('click',()=>{createAccount();closeDrawer();});
-document.getElementById('d-sales').addEventListener('click',()=>{showSales();closeDrawer();});
-document.getElementById('c-ren').addEventListener('click',openRename);
-document.getElementById('c-img-btn').addEventListener('click',()=>document.getElementById('img-in').click());
-document.getElementById('c-send').addEventListener('click',sendAccMsg);
-document.getElementById('c-ta').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
-document.getElementById('c-ta').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAccMsg();}});
-document.getElementById('c-clear-btn').addEventListener('click',openAccClearBar);
-document.getElementById('c-cfm-no').addEventListener('click',closeAccClearBar);
-document.getElementById('c-cfm-yes').addEventListener('click',confirmAccClear);
-document.getElementById('del-msg-no').addEventListener('click',cancelDelMsg);
-document.getElementById('del-msg-yes').addEventListener('click',confirmDelMsg);
-document.getElementById('s-clear-btn').addEventListener('click',openClearBar);
-document.getElementById('cfm-no').addEventListener('click',closeClearBar);
-document.getElementById('cfm-yes').addEventListener('click',confirmClear);
-document.getElementById('s-sheets-btn').addEventListener('click',()=>openMo('mo-sheets'));
-document.getElementById('s-file-btn').addEventListener('click',()=>document.getElementById('pdf-in').click());
-document.getElementById('s-send').addEventListener('click',sendSaleMsg);
-document.getElementById('s-ta').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
-document.getElementById('s-ta').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendSaleMsg();}});
-document.getElementById('sov-close').addEventListener('click',closeSOv);
-document.getElementById('lb-x').addEventListener('click',closeLB);
-document.getElementById('lb').addEventListener('click',function(e){if(e.target===this)closeLB();});
-document.getElementById('mo-sheets-cancel').addEventListener('click',()=>closeMo('mo-sheets'));
-document.getElementById('mo-sheets-save').addEventListener('click',()=>{closeMo('mo-sheets');toast('URL guardada','ok');});
-document.getElementById('mo-rename-cancel').addEventListener('click',()=>closeMo('mo-rename'));
-document.getElementById('mo-rename-save').addEventListener('click',doRename);
-document.getElementById('mo-rename-in').addEventListener('keydown',e=>{if(e.key==='Enter')doRename();});
-document.getElementById('mo-del-cancel').addEventListener('click',()=>closeMo('mo-del'));
-document.querySelectorAll('.mo').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('on');}));
+$('menu-btn').addEventListener('click', openDrawer);
+$('dov').addEventListener('click', closeDrawer);
+$('btn-sales').addEventListener('click', showSales);
+$('emp-btn').addEventListener('click', showSales);
+$('d-new').addEventListener('click', () => { createAccount(); closeDrawer(); });
+$('d-sales').addEventListener('click', () => { showSales(); closeDrawer(); });
 
-// ── STOCK ─────────────────────────────────────────────────────────────────────
-const STOCK_API = 'https://script.google.com/macros/s/AKfycby4kQlZ_m4t_8bp9NS_7fm5mq7G5_6LzHSy2Y3xpyERI0ysub30GuOH9-YxFWsG-CzlTQ/exec';
-let _stockData = null;
-let _stockProduct = '';
-let _stockColor = '';
-let _stockSizes = {};
-let _stockCart = [];
-let _modelColorsMap = {};
-let _desiredStock = {};
+const dlist = $('dlist');
+dlist.addEventListener('click', e => {
+  const row = e.target.closest('.drow'); if (!row) return;
+  if (e.target.closest('.d-del')) askDel(row.dataset.id);
+  else if (e.target.closest('.d-acc-btn')){ showChat(row.dataset.id); closeDrawer(); }
+});
+dlist.addEventListener('touchstart', onDragStart, {passive: true});
+dlist.addEventListener('touchmove', onDragMove, {passive: true});
+dlist.addEventListener('touchend', () => onDragEnd(true), {passive: true});
+dlist.addEventListener('touchcancel', () => onDragEnd(false), {passive: true});
+
+// Chat de cuenta
+$('c-ren').addEventListener('click', openRename);
+$('c-email-btn').addEventListener('click', e => { if (e.currentTarget.classList.contains('dim')) e.preventDefault(); });
+$('c-img-btn').addEventListener('click', () => $('img-in').click());
+$('img-in').addEventListener('change', function(){
+  const files = Array.from(this.files);
+  this.value = '';
+  if (files.length && curId) uploadAccImages(files);
+});
+bindComposer('c-ta', 'c-send', sendAccMsg);
+$('c-clear-btn').addEventListener('click', openAccClearBar);
+$('c-cfm-no').addEventListener('click', closeAccClearBar);
+$('c-cfm-yes').addEventListener('click', confirmAccClear);
+
+// Chat de ventas
+$('del-msg-no').addEventListener('click', cancelDelMsg);
+$('del-msg-yes').addEventListener('click', confirmDelMsg);
+$('s-clear-btn').addEventListener('click', openClearBar);
+$('cfm-no').addEventListener('click', closeClearBar);
+$('cfm-yes').addEventListener('click', confirmClear);
+$('s-sheets-btn').addEventListener('click', () => openMo('mo-sheets'));
+$('s-file-btn').addEventListener('click', () => $('pdf-in').click());
+$('pdf-in').addEventListener('change', function(){
+  const file = this.files[0];
+  this.value = '';
+  if (file) uploadLabel(file);
+});
+bindComposer('s-ta', 's-send', sendSaleMsg);
+bindLongPress($('s-msgs'), askDelMsg);
+$('s-msgs').addEventListener('click', e => {
+  const b = e.target.closest('[data-retry]');
+  if (b) retrySale(b.dataset.retry);
+});
+
+// Scroll: mantener pegado al fondo cuando cargan imágenes
+for (const id of ['c-msgs', 's-msgs']){
+  const c = $(id);
+  let stick = true;
+  c.addEventListener('scroll', () => { stick = nearBottom(c); }, {passive: true});
+  c.addEventListener('load', e => { if (e.target.tagName === 'IMG' && stick) c.scrollTop = c.scrollHeight; }, true);
+  c.addEventListener('click', e => { const img = e.target.closest('img[data-lb]'); if (img) openLB(img.dataset.lb); });
+}
+
+// Overlay, lightbox y modales
+$('sov-close').addEventListener('click', closeSOv);
+$('sov').addEventListener('click', e => { if (e.target === e.currentTarget) closeSOv(); });
+$('lb-x').addEventListener('click', closeLB);
+$('lb').addEventListener('click', e => { if (e.target === e.currentTarget) closeLB(); });
+$('mo-sheets-cancel').addEventListener('click', () => closeMo('mo-sheets'));
+$('mo-sheets-save').addEventListener('click', () => { closeMo('mo-sheets'); toast('URL guardada', 'ok'); });
+$('mo-rename-cancel').addEventListener('click', () => closeMo('mo-rename'));
+$('mo-rename-save').addEventListener('click', doRename);
+$('mo-rename-in').addEventListener('keydown', e => { if (e.key === 'Enter') doRename(); });
+$('mo-del-cancel').addEventListener('click', () => closeMo('mo-del'));
+$('mo-del-ok').addEventListener('click', doDel);
+document.querySelectorAll('.mo').forEach(el => el.addEventListener('click', e => { if (e.target === el) el.classList.remove('on'); }));
+
+// ═════════════════════════════════════════════════════════════════════════════
+// STOCK
+// ═════════════════════════════════════════════════════════════════════════════
+const stock = {
+  data: null, loading: null,
+  product: '', color: '', sizes: {}, cart: [],
+  desired: {}, colorsByModel: {}, counts: new Map()
+};
+const skey = (...p) => p.map(x => String(x ?? '').trim().toLowerCase()).join('|');
+const stockCount = (...p) => stock.counts.get(skey(...p)) || 0;
+const sizesFor = (p, c) => (stock.desired[p] && stock.desired[p][c]) || DEFAULT_SIZES;
+
+// Lógica: prepara el catálogo y los contadores una sola vez por carga
+function indexStock(data){
+  const ds = data.desiredStock || {};
+  const catalog = data.catalog || [];
+  if (!Object.keys(ds).length && catalog.length){
+    for (const item of catalog){
+      ds[item.Product] ||= {};
+      ds[item.Product][item.Color] ||= DEFAULT_SIZES.slice();
+    }
+  }
+  const colorsByModel = {};
+  for (const [model, val] of Object.entries(ds)){
+    colorsByModel[model] = Array.isArray(val) ? val : (val && typeof val === 'object' ? Object.keys(val) : []);
+  }
+  const counts = new Map();
+  for (const i of data.stock || []){
+    for (const k of [skey(i.Product, i.Color), skey(i.Product, i.Color, i.Size)]) counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  return {desired: ds, colorsByModel, counts};
+}
+
+function loadStockData({silent = false} = {}){
+  if (stock.loading) return stock.loading;
+  if (!silent) setStockStatus('Cargando datos...', 'am');
+  stock.loading = Api.getStock().then(data => {
+    stock.data = data;
+    Object.assign(stock, indexStock(data));
+    if (!silent) setStockStatus('', '');
+    if (!silent || !stock.product) renderStockProducts();
+  }, e => {
+    if (!silent) setStockStatus(isNetErr(e) ? 'Sin conexión — no se pudieron cargar los datos' : 'Error al cargar datos: ' + e.message, 'err');
+  }).finally(() => { stock.loading = null; });
+  return stock.loading;
+}
 
 function showStock(){
-  view='stock'; hideAll(); document.getElementById('p-stock').classList.add('on');
-  document.getElementById('btn-sales').classList.remove('on');
-  buildDrawer();
-  if(!_stockData) loadStockData();
+  setView('stock'); syncDrawer();
+  if (!stock.data) loadStockData();
   else renderStockProducts();
 }
 
-async function loadStockData(){
-  setStockStatus('Cargando datos...','am');
-  try{
-    const res=await fetch(STOCK_API);
-    const data=await res.json();
-    _stockData=data;
-    let ds=data.desiredStock||{};
-    const catalog=data.catalog||[];
-    if(Object.keys(ds).length===0&&catalog.length>0){
-      catalog.forEach(item=>{
-        if(!ds[item.Product]) ds[item.Product]={};
-        if(!ds[item.Product][item.Color]) ds[item.Product][item.Color]=["36","37","38","39","40","41","42","43","44"];
-      });
-    }
-    _desiredStock=ds;
-    _modelColorsMap={};
-    for(const [model,val] of Object.entries(ds)){
-      _modelColorsMap[model]=val&&!Array.isArray(val)&&typeof val==='object'?Object.keys(val):(Array.isArray(val)?val:[]);
-    }
-    setStockStatus('','');
-    renderStockProducts();
-  }catch(e){
-    setStockStatus('Error al cargar datos','err');
-  }
+function setStockStatus(msg, type){
+  const el = $('stock-status');
+  el.hidden = !msg;
+  if (!msg) return;
+  el.textContent = msg;
+  el.className = 'st-status ' + (type || 'am');
 }
 
-function setStockStatus(msg,type){
-  const el=document.getElementById('stock-status');
-  if(!msg){el.style.display='none';return;}
-  el.style.display='block'; el.textContent=msg;
-  el.style.background=type==='err'?'var(--rdim)':type==='ok'?'var(--adim)':'var(--amdim)';
-  el.style.color=type==='err'?'var(--re)':type==='ok'?'var(--ac)':'var(--am)';
-  el.style.border='1px solid '+(type==='err'?'rgba(226,75,74,.2)':type==='ok'?'rgba(9,201,122,.2)':'rgba(239,159,39,.2)');
+function makePill(text, dashed, data){
+  const d = h('div', 'spill' + (dashed ? ' dashed' : ''), text);
+  Object.assign(d.dataset, data);
+  return d;
+}
+function selectPill(grid, pill){
+  for (const p of grid.children) p.classList.toggle('sel', p === pill);
 }
 
 function renderStockProducts(){
-  const grid=document.getElementById('stock-products-grid'); grid.innerHTML='';
-  Object.keys(_desiredStock).sort().forEach(p=>{
-    const div=makePill(p,false);
-    div.addEventListener('click',()=>{
-      grid.querySelectorAll('.spill').forEach(d=>unselPill(d));
-      selPill(div);
-      _stockProduct=p; _stockColor=''; _stockSizes={};
-      document.getElementById('stock-new-product-wrap').style.display='none';
-      onStockProductSelected();
-    });
-    grid.appendChild(div);
-  });
-  const newDiv=makePill('+ Nuevo Modelo',true);
-  newDiv.addEventListener('click',()=>{
-    grid.querySelectorAll('.spill').forEach(d=>unselPill(d)); selPill(newDiv);
-    _stockProduct='NEW'; _stockColor='NEW'; _stockSizes={};
-    document.getElementById('stock-new-product-wrap').style.display='block';
-    document.getElementById('stock-colors-wrap').style.display='none';
-    document.getElementById('stock-new-color-wrap').style.display='block';
-    onStockColorSelected(["36","37","38","39","40","41","42","43","44"]);
-  });
-  grid.appendChild(newDiv);
+  const grid = $('stock-products-grid');
+  const frag = document.createDocumentFragment();
+  for (const p of Object.keys(stock.desired).sort()) frag.append(makePill(p, false, {product: p}));
+  frag.append(makePill('+ Nuevo Modelo', true, {newProduct: '1'}));
+  grid.replaceChildren(frag);
+}
+
+function onProductPick(pill){
+  selectPill($('stock-products-grid'), pill);
+  stock.sizes = {};
+  if (pill.dataset.newProduct){
+    stock.product = 'NEW'; stock.color = 'NEW';
+    $('stock-new-product-wrap').hidden = false;
+    $('stock-colors-wrap').hidden = true;
+    $('stock-new-color-wrap').hidden = false;
+    onStockColorSelected(DEFAULT_SIZES);
+    return;
+  }
+  stock.product = pill.dataset.product; stock.color = '';
+  $('stock-new-product-wrap').hidden = true;
+  onStockProductSelected();
 }
 
 function onStockProductSelected(){
-  document.getElementById('stock-colors-wrap').style.display='block';
-  document.getElementById('stock-new-color-wrap').style.display='none';
-  document.getElementById('stock-sizes-wrap').style.display='none';
-  document.getElementById('stock-price-wrap').style.display='none';
+  $('stock-colors-wrap').hidden = false;
+  $('stock-new-color-wrap').hidden = true;
+  $('stock-sizes-wrap').hidden = true;
+  $('stock-price-wrap').hidden = true;
   checkStockValidity();
-  const colors=(_modelColorsMap[_stockProduct]||[]).sort();
-  const cgrid=document.getElementById('stock-colors-grid'); cgrid.innerHTML='';
-  colors.forEach(c=>{
-    const inStock=(_stockData.stock||[]).filter(i=>(i.Product||'').toLowerCase()===_stockProduct.toLowerCase()&&(i.Color||'').toLowerCase()===c.toLowerCase()).length;
-    const div=makePill(c+' ('+inStock+')',false); div.dataset.color=c;
-    div.addEventListener('click',()=>{
-      cgrid.querySelectorAll('.spill').forEach(d=>unselPill(d)); selPill(div);
-      _stockColor=c; _stockSizes={};
-      const sizes=(_desiredStock[_stockProduct]&&_desiredStock[_stockProduct][c])||["36","37","38","39","40","41","42","43","44"];
-      onStockColorSelected(sizes);
-    });
-    cgrid.appendChild(div);
-  });
-  const newC=makePill('+ Nuevo Color',true);
-  newC.addEventListener('click',()=>{
-    cgrid.querySelectorAll('.spill').forEach(d=>unselPill(d)); selPill(newC);
-    _stockColor='NEW';
-    document.getElementById('stock-new-color-wrap').style.display='block';
-    onStockColorSelected(["36","37","38","39","40","41","42","43","44"]);
-  });
-  cgrid.appendChild(newC);
+  const frag = document.createDocumentFragment();
+  for (const c of (stock.colorsByModel[stock.product] || []).slice().sort()){
+    frag.append(makePill(c + ' (' + stockCount(stock.product, c) + ')', false, {color: c}));
+  }
+  frag.append(makePill('+ Nuevo Color', true, {newColor: '1'}));
+  $('stock-colors-grid').replaceChildren(frag);
+}
+
+function onColorPick(pill){
+  selectPill($('stock-colors-grid'), pill);
+  if (pill.dataset.newColor){
+    stock.color = 'NEW';
+    $('stock-new-color-wrap').hidden = false;
+    onStockColorSelected(DEFAULT_SIZES);
+    return;
+  }
+  stock.color = pill.dataset.color;
+  $('stock-new-color-wrap').hidden = true;
+  onStockColorSelected(sizesFor(stock.product, stock.color));
 }
 
 function onStockColorSelected(sizes){
-  document.getElementById('stock-sizes-wrap').style.display='block';
-  document.getElementById('stock-price-wrap').style.display='block';
-  _stockSizes={};
-  sizes.forEach(s=>{ _stockSizes[s]=0; });
+  $('stock-sizes-wrap').hidden = false;
+  $('stock-price-wrap').hidden = false;
+  stock.sizes = {};
+  for (const s of sizes) stock.sizes[s] = 0;
   renderSizeGrid();
   checkStockValidity();
 }
 
+const finalProduct = () => stock.product === 'NEW' ? $('stock-new-product').value.trim() : stock.product;
+const finalColor   = () => stock.color === 'NEW' ? $('stock-new-color').value.trim() : stock.color;
+
 function renderSizeGrid(){
-  const sgrid=document.getElementById('stock-sizes-grid'); sgrid.innerHTML='';
-  const product=_stockProduct==='NEW'?document.getElementById('stock-new-product').value.trim():_stockProduct;
-  const color=_stockColor==='NEW'?document.getElementById('stock-new-color').value.trim():_stockColor;
-  const allSizes=Object.keys(_stockSizes);
-
-  allSizes.forEach(s=>{
-    // Count current stock for this size
-    const inStock=(_stockData&&_stockData.stock)?
-      (_stockData.stock||[]).filter(i=>
-        (i.Product||'').toLowerCase()===product.toLowerCase()&&
-        (i.Color||'').toLowerCase()===color.toLowerCase()&&
-        (i.Size||'').toString().trim()===s
-      ).length : 0;
-
-    const div=document.createElement('div');
-    div.style.cssText='padding:8px 6px 6px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--b1);cursor:pointer;text-align:center;position:relative;transition:all .15s;user-select:none;';
-
-    // Size number
-    const sizeNum=document.createElement('div');
-    sizeNum.style.cssText='font-size:15px;font-weight:700;color:var(--t1);';
-    sizeNum.textContent=s;
-
-    // Stock count below
-    const stockLbl=document.createElement('div');
-    stockLbl.style.cssText='font-size:10px;font-family:monospace;color:var(--t3);margin-top:2px;';
-    stockLbl.textContent=inStock+' en stock';
-
-    // Badge for qty being added
-    const badge=document.createElement('div');
-    badge.style.cssText='position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:var(--bl);border-radius:50%;font-size:11px;color:#fff;display:none;align-items:center;justify-content:center;font-weight:700;';
-    if((_stockSizes[s]||0)>0){
-      badge.textContent=_stockSizes[s]; badge.style.display='flex';
-      div.style.background='rgba(55,138,221,.12)'; div.style.border='1px solid rgba(55,138,221,.5)';
-    }
-
-    // Minus button (bottom left)
-    const minus=document.createElement('button');
-    minus.textContent='-';
-    minus.style.cssText='position:absolute;bottom:-6px;left:-6px;width:20px;height:20px;background:var(--rdim);border:1px solid rgba(226,75,74,.3);border-radius:50%;color:var(--re);font-size:14px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;padding:0;';
-    if((_stockSizes[s]||0)>0) minus.style.display='flex';
-
-    minus.addEventListener('click',e=>{
-      e.stopPropagation();
-      if((_stockSizes[s]||0)>0){
-        _stockSizes[s]--;
-        if(_stockSizes[s]===0){
-          badge.style.display='none'; minus.style.display='none';
-          div.style.background='rgba(255,255,255,.05)'; div.style.border='1px solid var(--b1)';
-        } else {
-          badge.textContent=_stockSizes[s];
-        }
-        checkStockValidity();
-      }
-    });
-
-    div.addEventListener('click',()=>{
-      _stockSizes[s]=(_stockSizes[s]||0)+1;
-      badge.textContent=_stockSizes[s]; badge.style.display='flex';
-      minus.style.display='flex';
-      div.style.background='rgba(55,138,221,.12)'; div.style.border='1px solid rgba(55,138,221,.5)';
-      checkStockValidity();
-    });
-
-    div.append(sizeNum, stockLbl, badge, minus);
-    sgrid.appendChild(div);
-  });
+  const product = finalProduct(), color = finalColor();
+  const frag = document.createDocumentFragment();
+  for (const s of Object.keys(stock.sizes)){
+    const cell = h('div', 'ssize'); cell.dataset.size = s;
+    const badge = h('div', 'ss-badge');
+    const minus = h('button', 'ss-minus', '-');
+    minus.setAttribute('aria-label', 'Quitar talla ' + s);
+    cell.append(h('div', 'ss-num', s), h('div', 'ss-lbl', stockCount(product, color, s) + ' en stock'), badge, minus);
+    paintSizeCell(cell);
+    frag.append(cell);
+  }
+  $('stock-sizes-grid').replaceChildren(frag);
 }
-
-function makePill(text,dashed){
-  const div=document.createElement('div');
-  div.className='spill';
-  div.style.cssText='padding:11px 10px;background:rgba(255,255,255,.05);border-radius:10px;border:1px '+(dashed?'dashed':'solid')+' var(--b1);cursor:pointer;text-align:center;font-size:13px;font-weight:600;color:'+(dashed?'var(--t3)':'var(--t1)')+';transition:all .15s;user-select:none;';
-  div.textContent=text;
-  return div;
+function paintSizeCell(cell){
+  const q = stock.sizes[cell.dataset.size] || 0;
+  cell.classList.toggle('sel', q > 0);
+  cell.querySelector('.ss-badge').textContent = q > 0 ? q : '';
 }
-function selPill(d){ d.style.background='rgba(55,138,221,.15)'; d.style.border='1px solid rgba(55,138,221,.5)'; d.style.color='var(--bl)'; }
-function unselPill(d){ d.style.background='rgba(255,255,255,.05)'; d.style.border='1px '+(d.style.borderStyle==='dashed'?'dashed':'solid')+' var(--b1)'; d.style.color=d.textContent.startsWith('+')?'var(--t3)':'var(--t1)'; }
+function onSizeTap(e){
+  const cell = e.target.closest('.ssize'); if (!cell) return;
+  const s = cell.dataset.size;
+  if (e.target.closest('.ss-minus')){
+    if ((stock.sizes[s] || 0) > 0) stock.sizes[s]--;
+  } else {
+    stock.sizes[s] = (stock.sizes[s] || 0) + 1;
+  }
+  paintSizeCell(cell);
+  checkStockValidity();
+}
 
 function checkStockValidity(){
-  const total=Object.values(_stockSizes).reduce((a,v)=>a+v,0);
-  const price=document.getElementById('stock-price');
-  const newProd=document.getElementById('stock-new-product').value.trim();
-  const newCol=document.getElementById('stock-new-color').value.trim();
-  const finalProd=_stockProduct==='NEW'?newProd:_stockProduct;
-  const finalCol=_stockColor==='NEW'?newCol:_stockColor;
-  const btn=document.getElementById('stock-add-cart-btn');
-  const valid=total>0&&price&&price.value.trim()!==''&&finalProd!==''&&finalCol!=='';
-  btn.disabled=!valid; btn.style.opacity=valid?'1':'.4';
+  const total = Object.values(stock.sizes).reduce((a, v) => a + v, 0);
+  const valid = total > 0 && $('stock-price').value.trim() !== '' && finalProduct() !== '' && finalColor() !== '';
+  $('stock-add-cart-btn').disabled = !valid;
 }
 
-document.getElementById('stock-add-cart-btn').addEventListener('click',()=>{
-  const newProd=document.getElementById('stock-new-product').value.trim();
-  const newCol=document.getElementById('stock-new-color').value.trim();
-  const finalProd=_stockProduct==='NEW'?newProd:_stockProduct;
-  const finalCol=_stockColor==='NEW'?newCol:_stockColor;
-  const priceEl=document.getElementById('stock-price');
-  const boughtPrice=parseFloat(priceEl.value.replace(',','.'));
-  const selectedSizes=[];
-  for(const [size,qty] of Object.entries(_stockSizes)){ for(let i=0;i<qty;i++) selectedSizes.push(size); }
-  if(!selectedSizes.length||!finalProd||isNaN(boughtPrice)) return;
-  _stockCart.push({id:Date.now(),product:finalProd,color:finalCol,sizes:selectedSizes,boughtPrice});
+function addToCart(){
+  const product = finalProduct(), color = finalColor();
+  const priceEl = $('stock-price');
+  const boughtPrice = parseFloat(priceEl.value.replace(',', '.'));
+  const sizes = [];
+  for (const [size, qty] of Object.entries(stock.sizes)) for (let i = 0; i < qty; i++) sizes.push(size);
+  if (!sizes.length || !product || isNaN(boughtPrice)) return;
+
+  stock.cart.push({id: Date.now(), product, color, sizes, boughtPrice});
   updateStockCartUI();
-  priceEl.value=''; _stockProduct=''; _stockColor=''; _stockSizes={};
-  document.getElementById('stock-new-product-wrap').style.display='none';
-  document.getElementById('stock-new-color-wrap').style.display='none';
-  document.getElementById('stock-colors-wrap').style.display='none';
-  document.getElementById('stock-sizes-wrap').style.display='none';
-  document.getElementById('stock-price-wrap').style.display='none';
-  document.getElementById('stock-products-grid').querySelectorAll('.spill').forEach(d=>unselPill(d));
+
+  priceEl.value = ''; stock.product = ''; stock.color = ''; stock.sizes = {};
+  for (const id of ['stock-new-product-wrap', 'stock-new-color-wrap', 'stock-colors-wrap', 'stock-sizes-wrap', 'stock-price-wrap']) $(id).hidden = true;
+  selectPill($('stock-products-grid'), null);
   checkStockValidity();
-  toast('Añadido al carrito','ok');
-});
+  toast('Añadido al carrito', 'ok');
+}
 
 function updateStockCartUI(){
-  const wrap=document.getElementById('stock-cart-wrap');
-  const container=document.getElementById('stock-cart-items');
-  if(!_stockCart.length){wrap.style.display='none';return;}
-  wrap.style.display='block'; container.innerHTML='';
-  let totalPairs=0, totalPrice=0;
-  _stockCart.forEach(item=>{
-    totalPairs+=item.sizes.length; totalPrice+=item.boughtPrice*item.sizes.length;
-    const sizeCounts=item.sizes.reduce((a,s)=>{a[s]=(a[s]||0)+1;return a;},{});
-    const sizeStr=Object.entries(sizeCounts).map(([s,q])=>q>1?s+' x'+q:s).join(', ');
-    const div=document.createElement('div');
-    div.style.cssText='background:rgba(255,255,255,.05);border:1px solid var(--b1);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;';
-    div.innerHTML='<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:13px;font-weight:700;color:var(--t1);">'+esc(item.product)+' - '+esc(item.color)+'</div>'
-      +'<div style="font-size:11px;color:var(--t3);margin-top:2px;">'+sizeStr+' ('+item.sizes.length+' pares)</div>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
-      +'<span style="font-size:13px;font-weight:700;color:var(--ac);">'+(item.boughtPrice*item.sizes.length).toFixed(2)+'€</span>'
-      +'<button onclick="removeStockCart('+item.id+')" style="background:none;border:none;color:var(--re);cursor:pointer;font-size:16px;padding:4px;">🗑</button>'
-      +'</div>';
-    container.appendChild(div);
-  });
-  document.getElementById('stock-total-pairs').textContent=totalPairs;
-  document.getElementById('stock-total-price').textContent=totalPrice.toFixed(2)+'€';
+  const wrap = $('stock-cart-wrap');
+  if (!stock.cart.length){ wrap.hidden = true; return; }
+  wrap.hidden = false;
+  let totalPairs = 0, totalPrice = 0;
+  const frag = document.createDocumentFragment();
+  for (const item of stock.cart){
+    totalPairs += item.sizes.length;
+    totalPrice += item.boughtPrice * item.sizes.length;
+    const counts = item.sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
+    const sizeStr = Object.entries(counts).map(([s, q]) => q > 1 ? s + ' x' + q : s).join(', ');
+
+    const row = h('div', 'cart-item');
+    const info = h('div', 'ci-info');
+    info.append(h('div', 'ci-title', item.product + ' - ' + item.color), h('div', 'ci-sizes', sizeStr + ' (' + item.sizes.length + ' pares)'));
+    const right = h('div', 'ci-right');
+    const del = h('button', 'cart-del', '🗑');
+    del.dataset.id = item.id; del.setAttribute('aria-label', 'Quitar del carrito');
+    right.append(h('span', 'ci-price', (item.boughtPrice * item.sizes.length).toFixed(2) + '€'), del);
+    row.append(info, right);
+    frag.append(row);
+  }
+  $('stock-cart-items').replaceChildren(frag);
+  $('stock-total-pairs').textContent = totalPairs;
+  $('stock-total-price').textContent = totalPrice.toFixed(2) + '€';
 }
 
-window.removeStockCart=function(id){ _stockCart=_stockCart.filter(i=>i.id!==id); updateStockCartUI(); };
-
-document.getElementById('stock-save-btn').addEventListener('click',async()=>{
-  if(!_stockCart.length) return;
-  const btn=document.getElementById('stock-save-btn');
-  btn.textContent='Guardando...'; btn.disabled=true;
-  try{
-    await fetch(STOCK_API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'addStockBulk',cart:_stockCart})});
-    const total=_stockCart.reduce((a,c)=>a+c.sizes.length,0);
-    setStockStatus(total+' pares añadidos al stock','ok');
-    _stockCart=[]; updateStockCartUI(); _stockData=null;
-    toast(total+' pares guardados','ok');
-    setTimeout(()=>setStockStatus('',''),3000);
-  }catch(e){
-    setStockStatus('Error al guardar','err');
+async function saveStock(){
+  if (!stock.cart.length) return;
+  const btn = $('stock-save-btn');
+  const label = btn.textContent;
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+  try {
+    await Api.addStockBulk(stock.cart);
+    const total = stock.cart.reduce((a, c) => a + c.sizes.length, 0);
+    setStockStatus(total + ' pares añadidos al stock', 'ok');
+    stock.cart = []; updateStockCartUI();
+    toast(total + ' pares guardados', 'ok');
+    setTimeout(() => setStockStatus('', ''), 3000);
+    loadStockData({silent: true});   // refresca contadores sin bloquear
+  } catch (e) {
+    // Sin reintento automático: addStockBulk no es idempotente
+    setStockStatus(isNetErr(e)
+      ? 'Sin conexión — revisa el Sheet antes de reintentar'
+      : 'Error al guardar: ' + e.message, 'err');
   }
-  btn.textContent='Guardar todo el stock'; btn.disabled=false;
-});
+  btn.textContent = label; btn.disabled = false;
+}
 
-['stock-price','stock-new-product','stock-new-color'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el) el.addEventListener('input',checkStockValidity);
+$('stock-products-grid').addEventListener('click', e => { const p = e.target.closest('.spill'); if (p) onProductPick(p); });
+$('stock-colors-grid').addEventListener('click', e => { const p = e.target.closest('.spill'); if (p) onColorPick(p); });
+$('stock-sizes-grid').addEventListener('click', onSizeTap);
+$('stock-cart-items').addEventListener('click', e => {
+  const b = e.target.closest('.cart-del'); if (!b) return;
+  stock.cart = stock.cart.filter(i => String(i.id) !== b.dataset.id);
+  updateStockCartUI();
 });
+$('stock-add-cart-btn').addEventListener('click', addToCart);
+$('stock-save-btn').addEventListener('click', saveStock);
+for (const id of ['stock-price', 'stock-new-product', 'stock-new-color']) $(id).addEventListener('input', checkStockValidity);
 
-document.getElementById('btn-stock').addEventListener('click',showStock);
-document.getElementById('d-stock').addEventListener('click',()=>{showStock();closeDrawer();});
-document.getElementById('stock-back-btn').addEventListener('click',()=>{
-  if(view==='stock'){ if(saleMsgs.length>0) showSales(); else showEmpty(); }
+$('btn-stock').addEventListener('click', showStock);
+$('d-stock').addEventListener('click', () => { showStock(); closeDrawer(); });
+$('stock-back-btn').addEventListener('click', () => {
+  if (view === 'stock'){ saleMsgs.length ? showSales() : showEmpty(); }
 });
 
 init();
