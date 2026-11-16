@@ -433,7 +433,7 @@ textarea.inp::placeholder{color:var(--t3);}
         <button class="inp-ico" id="s-file-btn" aria-label="Subir etiqueta">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </button>
-        <textarea class="inp" id="s-ta" placeholder="3 Birkenstock Sand 43 40€" rows="1" enterkeyhint="send"></textarea>
+        <textarea class="inp" id="s-ta" placeholder="3 / Wallapop Birkenstock Sand 43 40€" rows="1" enterkeyhint="send"></textarea>
         <button class="inp-ico send" id="s-send" aria-label="Enviar">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -734,7 +734,7 @@ const PUBLICADO_KEYWORD = 'publicado ';
 
 function isFotoQuery(txt){
   const t = txt.toLowerCase().trim();
-  if (/^\d/.test(t)) return false;              // si empieza por número es una venta
+  if (/^\d/.test(t) || t.startsWith('wallapop')) return false;   // si empieza por número o "wallapop" es una venta
   return FOTO_KEYWORDS.includes(t);
 }
 const isPublicadoCmd = txt => txt.toLowerCase().trim().startsWith(PUBLICADO_KEYWORD);
@@ -772,14 +772,17 @@ function parsePublicado(txt){
   if (parts.length < 3) return null;
   return splitItem(parts);
 }
-// "3 Nike Sand 43 40€"
+// "3 Nike Sand 43 40€"  ·  "Wallapop Nike Sand 43 40€" (cuenta única de Wallapop)
+const WALLAPOP = 'Wallapop';
+const isWallapop = c => String(c || '').toLowerCase() === 'wallapop';
 function parseVenta(txt){
   const sp = splitPrice(txt.trim());
   if (!sp) return null;
   const parts = sp.rest.split(/\s+/);
   if (parts.length < 4) return null;
-  const numCuenta = parts[0];
-  if (!/^\d+$/.test(numCuenta)) return null;
+  let numCuenta = parts[0];
+  if (isWallapop(numCuenta)) numCuenta = WALLAPOP;
+  else if (!/^\d+$/.test(numCuenta)) return null;
   const item = splitItem(parts.slice(1));
   if (!item || isNaN(sp.price)) return null;
   return {numCuenta, ...item, price: sp.price};
@@ -948,7 +951,7 @@ function ventaNodes(m){
   pills.append(
     h('span', 'vc-pill', m.color || ''),
     h('span', 'vc-pill', 'T.' + (m.size || '')),
-    h('span', 'vc-pill', 'Cta.' + (m.numCuenta || ''))
+    h('span', 'vc-pill', isWallapop(m.numCuenta) ? WALLAPOP : 'Cta.' + (m.numCuenta || ''))
   );
   body.append(h('div', 'vc-title', m.product || ''), pills, h('div', 'vc-price', (m.price || '') + '€'));
   if (m.labelUrl){
@@ -1513,7 +1516,9 @@ async function syncVenta(m){
   m.syncStatus = 'ok'; m.syncEmail = res.email; m.syncPrice = res.price;
   renderSales();
   showSOv('s', '✓ Guardado en Sheets',
-    m.product + ' ' + m.color + ' T.' + m.size + '\nComprador: ' + res.email + '\nPrecio: ' + res.price + '€'
+    m.product + ' ' + m.color + ' T.' + m.size
+    + (isWallapop(m.numCuenta) ? '\nVendido en: Wallapop' : '')
+    + (res.email ? '\nComprador: ' + res.email : '') + '\nPrecio: ' + (res.price ?? m.price) + '€'
     + ((m.labelUrl || labelWait.has(m.id)) ? '\n📎 Etiqueta guardada' : ''));
 
   const wait = labelWait.get(m.id);
