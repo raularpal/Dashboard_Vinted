@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Vinted HQ</title>
@@ -27,7 +27,9 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 [hidden]{display:none!important;}
-html,body{height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;background:var(--bg);}
+html,body{height:100%;height:100dvh;height:var(--app-h,100dvh);overflow:hidden;overscroll-behavior:none;background:var(--bg);}
+/* Con el teclado abierto no hace falta el hueco de la barra de inicio */
+html.kb .inp-wrap{padding-bottom:10px;}
 body{font-family:'Syne',sans-serif;color:var(--t1);display:flex;flex-direction:column;font-size:16px;padding-left:var(--sl);padding-right:var(--sr);}
 
 /* ── Tap targets: amplía el área táctil a 44px sin cambiar el tamaño visual ── */
@@ -1944,6 +1946,35 @@ $('d-stock').addEventListener('click', () => { showStock(); closeDrawer(); });
 $('stock-back-btn').addEventListener('click', () => {
   if (view === 'stock'){ saleMsgs.length ? showSales() : showEmpty(); }
 });
+
+// ── Teclado móvil: como un chat normal ──────────────────────────────────────
+// La app ocupa solo la zona visible encima del teclado: la cabecera se queda
+// fija, el chat se encoge y la caja de escribir queda pegada al teclado.
+(function fitToKeyboard(){
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const root = document.documentElement;
+  let lastH = 0;
+  const fit = () => {
+    const hgt = Math.round(vv.height);
+    if (hgt !== lastH){
+      // Guardar qué chats estaban abajo del todo antes de cambiar el alto
+      const stuck = [...document.querySelectorAll('.msgs')].filter(c => c.offsetParent && nearBottom(c));
+      root.style.setProperty('--app-h', hgt + 'px');
+      root.classList.toggle('kb', window.innerHeight - hgt > 120);
+      lastH = hgt;
+      for (const c of stuck) c.scrollTop = c.scrollHeight;
+    }
+    // iOS desplaza la página entera al enfocar un campo: la devolvemos arriba
+    if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
+  };
+  vv.addEventListener('resize', fit);
+  vv.addEventListener('scroll', fit);
+  window.addEventListener('scroll', () => { if (window.scrollY) window.scrollTo(0, 0); }, {passive: true});
+  document.addEventListener('focusin', () => setTimeout(fit, 50));
+  document.addEventListener('focusout', () => setTimeout(fit, 50));
+  fit();
+})();
 
 init();
 </script>
