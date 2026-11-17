@@ -1518,7 +1518,7 @@ async function syncVenta(m){
   showSOv('s', '✓ Guardado en Sheets',
     m.product + ' ' + m.color + ' T.' + m.size
     + (isWallapop(m.numCuenta) ? '\nVendido en: Wallapop' : '')
-    + (res.email ? '\nComprador: ' + res.email : '') + '\nPrecio: ' + (res.price ?? m.price) + '€'
+    + (res.email && !isWallapop(res.email) ? '\nComprador: ' + res.email : '') + '\nPrecio: ' + (res.price ?? m.price) + '€'
     + ((m.labelUrl || labelWait.has(m.id)) ? '\n📎 Etiqueta guardada' : ''));
 
   const wait = labelWait.get(m.id);
